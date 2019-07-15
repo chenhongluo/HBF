@@ -39,8 +39,9 @@ extern __device__ unsigned int GlobalSyncArray[MAX_BLOCKDIM];
 
 template<int BlockDim>
 __device__ __forceinline__ void GlobalSync() {
-    static_assert(RESIDENT_BLOCKS<BlockDim>::value <= BlockDim,
-                  PRINT_ERR("GlobalSync : RESIDENT_BLOCKS > BlockDim"));
+    //
+	//(RESIDENT_BLOCKS<BlockDim>::value <= BlockDim,
+    //              PRINT_ERR("GlobalSync : RESIDENT_BLOCKS > BlockDim"));
 
 	volatile unsigned* VolatilePtr = GlobalSyncArray;
 	__syncthreads(); //-> block 0 ??

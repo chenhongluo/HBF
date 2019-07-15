@@ -30,7 +30,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "../../../Host/include/Numeric.hpp"
 using namespace numeric;
 
-const int        THREAD_PER_SM  =  2048;
+//TODO::chl
+const int        THREAD_PER_SM  =  1024;
 const int         MAX_BLOCKDIM  =  1024;
 const int MAX_SHARED_PER_BLOCK  =  49152;
 const int         CONSTANT_MEM  =  49152;
@@ -78,6 +79,12 @@ struct Max_SMem_Per_Block {
 			#pragma message("\n\nCompute Capability: 5.3\n")
 			const int SMEM_PER_SM = 65536;
 			const int RESIDENT_BLOCKS_PER_SM = 32;
+		//#endif
+		//TODO chl
+		#elif __CUDA_ARCH__ == 750 || ARCH == 750
+		#pragma message("\n\nCompute Capability: 5.3\n")
+		const int SMEM_PER_SM = 49152;
+		const int RESIDENT_BLOCKS_PER_SM = 16;
 		#endif
 
 		template<typename T>

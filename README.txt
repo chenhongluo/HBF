@@ -33,3 +33,13 @@ SUPPORTED INPUT FORMAT
 SNAP, METIS, GTGRAPH, MATRIX MARKET (mtx), DIMACS9TH, DIMACS10TH
 
 see GraphFormat.txt for more information
+
+
+rm -r * 
+
+cmake -DARCH=35 -DSM=68 .. 
+
+make -j
+
+./HBF /home/chl/data/flickr.mtx >>log.txt
+

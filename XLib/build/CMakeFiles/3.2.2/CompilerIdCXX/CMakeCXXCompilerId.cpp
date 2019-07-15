@@ -158,7 +158,9 @@
 # endif
 # define COMPILER_VERSION_MAJOR DEC(__clang_major__)
 # define COMPILER_VERSION_MINOR DEC(__clang_minor__)
-# define COMPILER_VERSION_PATCH DEC(__clang_patchlevel__)
+# define COMPILER_VERSION_PATCH DEC(__clang_pat
+
+evel__)
 # if defined(_MSC_VER)
    /* _MSC_VER = VVRR */
 #  define SIMULATE_VERSION_MAJOR DEC(_MSC_VER / 100)

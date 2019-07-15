@@ -114,7 +114,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 								break;			\
 							case 7: funB(128)	\
 								break;			\
-							default: fun(32)	\
+							default: funB(32)	\
 						}
 
 /// @namespace StreamModifier provide modifiers and support methods for std:ostream

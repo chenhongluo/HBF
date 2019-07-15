@@ -38,18 +38,25 @@ HBFGraph::HBFGraph(GraphSSSP& graph,
                    const int _degree_options) :
                    cudaGraphWeight(graph, _inverse_graph, _degree_options) {
 
-	cudaMalloc(&devDistances, graph.V * sizeof (hdist_t));
-    const int delta = (1 << 20) * 16;   //16 MB free
+	cudaMalloc(&devDistances, graph.V * sizeof(hdist_t));
+	const int delta = (1 << 20) * 16;   //16 MB free
 
     size_t free, total;
     cudaMemGetInfo(&free, &total);
-    cudaMalloc(&devF1, (free - delta) / 2 );
-    cudaMalloc(&devF2, (free - delta) / 2);
+
+	//TODO::chl
+	//const int tsize = std::min((free - delta) / 2,graph.V * sizeof(node_t));
+	cudaMalloc(&devF1, graph.V * 10 * sizeof(node_t));
+	cudaMalloc(&devF2, graph.V * 10 * sizeof(node_t));
+
+    // cudaMalloc(&devF1, (free - delta) / 2 );
+    // cudaMalloc(&devF2, (free - delta) / 2 );
     __CUDA_ERROR("HBFGraph Allocation");
 
     max_frontier_size = ((free - delta) / 2) / sizeof(node_t);
     StreamModifier::thousandSep();
     std::cout << "Max frontier size: " <<  max_frontier_size << std::endl;
+	//std::cout << "Max frontier size: " << tsize/sizeof(node_t) << std::endl;
     StreamModifier::resetSep();
 
     devDistanceInit = new hdist_t[graph.V];

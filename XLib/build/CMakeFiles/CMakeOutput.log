@@ -40,7 +40,8 @@ Linking C executable cmTryCompileExec914428573
 make[1]: Leaving directory `/storage/fbusato/lib/XLib/build/CMakeFiles/CMakeTmp'
 
 
-Detecting C compiler ABI info compiled with the following output:
+Detecting C compiler ABI 
+compiled with the following output:
 Change Dir: /storage/fbusato/lib/XLib/build/CMakeFiles/CMakeTmp
 
 Run Build Command:"/usr/bin/make" "cmTryCompileExec1736828902/fast"

@@ -44,13 +44,23 @@ cudaGraphWeight::cudaGraphWeight(GraphWeight& _graph,
         cudaMalloc(&devInNodes, (graph.V + 1) * sizeof(edge_t));
         cudaMalloc(&devInEdges, graph.E * sizeof(node_t));
     }
+	std::cout << "degree options" << degree_options << IN_DEGREE << OUT_DEGREE<< sizeof(int2) << sizeof(degree_t);
 
 	if ((degree_options & IN_DEGREE) && (degree_options & OUT_DEGREE))
+	{
+		std::cout << "degree options in out";
 		cudaMalloc(&devInOutDegrees, graph.V * sizeof(int2));
+	}
 	else if (degree_options & IN_DEGREE)
+	{
+		std::cout << "degree options in";
 		cudaMalloc(&devInDegrees, graph.V * sizeof(degree_t));
+	}
 	else if (degree_options & OUT_DEGREE)
+	{
+		std::cout << "degree options out";
 		cudaMalloc(&devOutDegrees, graph.V * sizeof(degree_t));
+	}
 
 	__CUDA_ERROR("Graph Allocation");
 }

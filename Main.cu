@@ -42,15 +42,22 @@ int main(int argc, char** argv) {
     GraphSSSP graph(V, E, edgeType);
     graph.read(argv[1], nof_lines);
 
+    printf("dev graph init\n");
+
     HBFGraph devGraph(graph, false, IN_DEGREE_OPT | OUT_DEGREE_OPT);
+
+    printf("\nmalloc devgraph");
+
     devGraph.copyToDevice();
+
+    printf("\ncopy to device");
 
     devGraph.WorkEfficient();
 
    // graph.DijkstraSET(0);
-/*
+
 #if defined(BOOST_FOUND)
     graph.BoostDijkstra(0);
     graph.BoostBellmanFord(0);
-#endif*/
+#endif
 }

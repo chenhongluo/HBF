@@ -25,25 +25,29 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Univerity of Verona, Dept. of Computer Science
  * federico.busato@univr.it
  */
+#ifndef _CONFIG_H
+#define _CONFIG_H
+
  
 const unsigned      	BLOCKDIM = 256;
-const int             N_OF_TESTS = 30;
+const int             N_OF_TESTS = 100;
 const bool CHECK_TRAVERSED_EDGES = false;
-const bool          CHECK_RESULT = true;
-const bool            CUDA_DEBUG = false;
+const bool          CHECK_RESULT = false;
+const int            CUDA_DEBUG = 0;
+const int			 DEBUG_LEVEL = 3;
 // -----------------------------------------------------------------------------
 
-#define          ATOMIC64	false    // optimization
+#define          ATOMIC64	true    // optimization
 
 const bool           SAFE = true;
 const bool    GLOBAL_SYNC = false;   //road network
 
-const bool           RING = false;   // avoid ring
+const bool           RING = true;   // avoid ring
 const int  OUT_DEGREE_OPT = 0;      // out-degree optimization  // 0 disable, 1 enable
 //distances of vertices with out-degree equal to 1 are not corretted
 const int   IN_DEGREE_OPT = 0;      // in-degree optimization   // 0 disable, 2 enable
 
-const int          MIN_VW = 1;      // minimum size of virtual warp (range [1, 32])
+const int          MIN_VW = 4;      // minimum size of virtual warp (range [1, 32])
 const int          MAX_VW = 32;      // maximum size of virtual warp (range [1, 32])
 const int   ITEM_PER_WARP = 1;      // gridDim = RESIDENT_THREADS * ITEM_PER_WARP
 
@@ -69,3 +73,5 @@ const int REG_LIMIT = 32;            // register size
 
 static_assert(!DYNAMIC_PARALLELISM || !GLOBAL_SYNC,
     "dynamic parallelism and global sync must not be enabled at the same time ");
+
+#endif

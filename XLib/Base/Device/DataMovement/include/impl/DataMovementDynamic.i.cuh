@@ -32,163 +32,169 @@ using namespace basic;
 using namespace primitives;
 
 namespace data_movement {
-namespace dynamic {
-namespace thread {
+	namespace dynamic {
+		namespace thread {
 
-template<cub::CacheStoreModifier M, typename T, int SIZE>
-__device__ __forceinline__ void RegToGlobal(T (&Queue)[SIZE],
-                                            const int size,
-                                            T* __restrict__ devPointer) {
-    for (int i = 0; i < size; i++)
-        cub::ThreadStore<M>(devPointer + i, Queue[i]);
-}
+			template<cub::CacheStoreModifier M, typename T, int SIZE>
+			__device__ __forceinline__ void RegToGlobal(T(&Queue)[SIZE],
+				const int size,
+				T* __restrict__ devPointer) {
+				for (int i = 0; i < size; i++)
+				{
+					//chl
+					//printf("datamove:%d", threadIdx.x);
+					cub::ThreadStore<M>(devPointer + i, Queue[i]);
+				}
+			}
 
-template<cub::CacheStoreModifier M, typename T, int SIZE>
-__device__ __forceinline__ void RegToGlobal_Unroll(T (&Queue)[SIZE],
-                                            const int size,
-                                            T* __restrict__ devPointer) {
-    #pragma unroll
-    for (int i = 0; i < SIZE; i++) {
-        if (i < size)
-            cub::ThreadStore<M>(devPointer + i, Queue[i]);
-    }
-}
+			template<cub::CacheStoreModifier M, typename T, int SIZE>
+			__device__ __forceinline__ void RegToGlobal_Unroll(T(&Queue)[SIZE],
+				const int size,
+				T* __restrict__ devPointer) {
+#pragma unroll
+				for (int i = 0; i < SIZE; i++) {
+					if (i < size)
+					{
+						cub::ThreadStore<M>(devPointer + i, Queue[i]);
+					}
+				}
+			}
 
-} // @thread
+		} // @thread
 
-namespace warp {
+		namespace warp {
 
-template<cub::CacheStoreModifier M, int Items_per_warp, typename T, int SIZE>
-__device__ __forceinline__ void RegToGlobal(T (&Queue)[SIZE],
-                                            const int size,
-                                            int thread_mem_offset,
-                                            const int total,
-                                            T* __restrict__ SMem,
-                                            T* __restrict__ devPointer) {
+			template<cub::CacheStoreModifier M, int Items_per_warp, typename T, int SIZE>
+			__device__ __forceinline__ void RegToGlobal(T(&Queue)[SIZE],
+				const int size,
+				int thread_mem_offset,
+				const int total,
+				T* __restrict__ SMem,
+				T* __restrict__ devPointer) {
 
-    T* SMemTMP = SMem;
-    devPointer += LaneID();
-    SMem += LaneID();
-    int j = 0;
-	while (true) {
-		while (j < size && thread_mem_offset < Items_per_warp) {
-			SMemTMP[thread_mem_offset] = Queue[j];
-			j++;
-            thread_mem_offset++;
-		}
-        if (total < Items_per_warp) {
-            #pragma unroll
-            for (int i = 0; i < Items_per_warp; i += 32) {
-                if (LaneID() + i < total)
-                    cub::ThreadStore<M>(devPointer + i, SMem[i]);
-            }
-            break;
-        }
-        else {
-    		#pragma unroll
-    		for (int i = 0; i < Items_per_warp; i += 32)
-				cub::ThreadStore<M>(devPointer + i, SMem[i]);
-        }
-        total -= Items_per_warp;
-		thread_mem_offset -= Items_per_warp;
-		devPointer += Items_per_warp;
-	}
-}
-
-
-template<cub::CacheStoreModifier M, int Items_per_warp, typename T, int SIZE>
-__device__ __forceinline__ void RegToGlobal_Min(T (&Queue)[SIZE],
-                                                const int size,
-                                                int thread_mem_offset,
-                                                const int total,
-                                                T* __restrict__ SMem,
-                                                T* __restrict__ devPointer) {
-    int minValue = size;
-	WarpReduce<>::MinBcast(minValue);
-
-    T* devPointerTMP = devPointer + LaneID();
-    for (int i = 0; i < minValue; i++)
-        cub::ThreadStore<M>(devPointerTMP + i * WARP_SIZE, Queue[i]);
-
-    size -= minValue;
-	thread_mem_offset -= LaneID() * minValue;
-    total -= minValue * WARP_SIZE;
-    devPointer += minValue * WARP_SIZE;
-
-    RegToGlobal(Queue + minValue, size, thread_mem_offset, total, SMem, devPointer);
-}
+				T* SMemTMP = SMem;
+				devPointer += LaneID();
+				SMem += LaneID();
+				int j = 0;
+				while (true) {
+					while (j < size && thread_mem_offset < Items_per_warp) {
+						SMemTMP[thread_mem_offset] = Queue[j];
+						j++;
+						thread_mem_offset++;
+					}
+					if (total < Items_per_warp) {
+#pragma unroll
+						for (int i = 0; i < Items_per_warp; i += 32) {
+							if (LaneID() + i < total)
+								cub::ThreadStore<M>(devPointer + i, SMem[i]);
+						}
+						break;
+					}
+					else {
+#pragma unroll
+						for (int i = 0; i < Items_per_warp; i += 32)
+							cub::ThreadStore<M>(devPointer + i, SMem[i]);
+					}
+					total -= Items_per_warp;
+					thread_mem_offset -= Items_per_warp;
+					devPointer += Items_per_warp;
+				}
+			}
 
 
-template<cub::CacheStoreModifier M, int Items_per_warp, typename T, int SIZE>
-__device__ __forceinline__ void RegToGlobal_Unroll(T (&Queue)[SIZE],
-                                            const int size,
-                                            int thread_mem_offset,
-                                            const int total,
-                                            T* __restrict__ SMem,
-                                            T* __restrict__ devPointer) {
-    T* SMemTMP = SMem;
-    devPointer += LaneID();
-    SMem += LaneID();
-	while (true) {
-        const int sum = thread_mem_offset + size;
-        if (sum < Items_per_warp) {
-            T* SMemTMP2 = SMemTMP + thread_mem_offset;
-            #pragma unroll
-            for (int i = 0; i < SIZE; i++) {
-                if (i < size)
-                    SMemTMP2[i] = Queue[i];
-            }
-        }
-        const int partial = WarpBroadcast(thread_mem_offset,
-                                          thread_mem_offset < Items_per_warp &&
-                                          sum >= Items_per_warp);
-        #pragma unroll
-        for (int i = 0; i < Items_per_warp; i += 32) {
-            if (LaneID() + i < partial)
-                cub::ThreadStore<M>(devPointer + i, SMem[i]);
-        }
-        total -= partial;
-        if (total <= 0)
-            break;
-		thread_mem_offset -= Items_per_warp;
-		devPointer += partial;
-	}
-}
+			template<cub::CacheStoreModifier M, int Items_per_warp, typename T, int SIZE>
+			__device__ __forceinline__ void RegToGlobal_Min(T(&Queue)[SIZE],
+				const int size,
+				int thread_mem_offset,
+				const int total,
+				T* __restrict__ SMem,
+				T* __restrict__ devPointer) {
+				int minValue = size;
+				WarpReduce<>::MinBcast(minValue);
 
-} //@warp
+				T* devPointerTMP = devPointer + LaneID();
+				for (int i = 0; i < minValue; i++)
+					cub::ThreadStore<M>(devPointerTMP + i * WARP_SIZE, Queue[i]);
 
-namespace block {
+				size -= minValue;
+				thread_mem_offset -= LaneID() * minValue;
+				total -= minValue * WARP_SIZE;
+				devPointer += minValue * WARP_SIZE;
 
-template<cub::CacheStoreModifier M, int BlockDim, int Items_per_block, typename T, int SIZE>
-__device__ __forceinline__ void RegToGlobal(T (&Queue)[SIZE],
-                                            const int size,
-                                            int thread_mem_offset,
-                                            const int total,
-                                            T* __restrict__ SMem,
-                                            T* __restrict__ devPointer) {
-    int j = 0;
-	while (true) {
-		while (j < size && thread_mem_offset < Items_per_block) {
-			SMem[thread_mem_offset] = Queue[j];
-			j++;
-            thread_mem_offset++;
-		}
-        __syncthreads();
-		#pragma unroll
-		for (int i = 0; i < Items_per_block; i += BlockDim) {
-			const int index = threadIdx.x + i;
-			if (index < total)
-				cub::ThreadStore<M>(devPointer + index, SMem[index]);
-		}
-        total -= Items_per_block;
-        if (total <= 0)
-            break;
-		thread_mem_offset -= Items_per_block;
-		devPointer += Items_per_block;
-        __syncthreads();
-	}
-}
+				RegToGlobal(Queue + minValue, size, thread_mem_offset, total, SMem, devPointer);
+			}
 
-} //@block
-} //@dynamic
+
+			template<cub::CacheStoreModifier M, int Items_per_warp, typename T, int SIZE>
+			__device__ __forceinline__ void RegToGlobal_Unroll(T(&Queue)[SIZE],
+				const int size,
+				int thread_mem_offset,
+				const int total,
+				T* __restrict__ SMem,
+				T* __restrict__ devPointer) {
+				T* SMemTMP = SMem;
+				devPointer += LaneID();
+				SMem += LaneID();
+				while (true) {
+					const int sum = thread_mem_offset + size;
+					if (sum < Items_per_warp) {
+						T* SMemTMP2 = SMemTMP + thread_mem_offset;
+#pragma unroll
+						for (int i = 0; i < SIZE; i++) {
+							if (i < size)
+								SMemTMP2[i] = Queue[i];
+						}
+					}
+					const int partial = WarpBroadcast(thread_mem_offset,
+						thread_mem_offset < Items_per_warp &&
+						sum >= Items_per_warp);
+#pragma unroll
+					for (int i = 0; i < Items_per_warp; i += 32) {
+						if (LaneID() + i < partial)
+							cub::ThreadStore<M>(devPointer + i, SMem[i]);
+					}
+					total -= partial;
+					if (total <= 0)
+						break;
+					thread_mem_offset -= Items_per_warp;
+					devPointer += partial;
+				}
+			}
+
+		} //@warp
+
+		namespace block {
+
+			template<cub::CacheStoreModifier M, int BlockDim, int Items_per_block, typename T, int SIZE>
+			__device__ __forceinline__ void RegToGlobal(T(&Queue)[SIZE],
+				const int size,
+				int thread_mem_offset,
+				const int total,
+				T* __restrict__ SMem,
+				T* __restrict__ devPointer) {
+				int j = 0;
+				while (true) {
+					while (j < size && thread_mem_offset < Items_per_block) {
+						SMem[thread_mem_offset] = Queue[j];
+						j++;
+						thread_mem_offset++;
+					}
+					__syncthreads();
+#pragma unroll
+					for (int i = 0; i < Items_per_block; i += BlockDim) {
+						const int index = threadIdx.x + i;
+						if (index < total)
+							cub::ThreadStore<M>(devPointer + index, SMem[index]);
+					}
+					total -= Items_per_block;
+					if (total <= 0)
+						break;
+					thread_mem_offset -= Items_per_block;
+					devPointer += Items_per_block;
+					__syncthreads();
+				}
+			}
+
+		} //@block
+	} //@dynamic
 } //@data_movement

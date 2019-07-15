@@ -36,7 +36,8 @@ extern __device__ int devF2Size[4];
 //extern __device__ int devMinL;
 //extern __device__ int devMinM;
 
-extern __shared__ int SMem[];
+
+extern  int SMem[];
 
 class HBFGraph : public cudaGraphWeight {
 private:
@@ -46,6 +47,7 @@ private:
     int max_frontier_size;
 
     inline void DynamicVirtualWarp(const int F1Size, const int level);
+	inline void DynamicVirtualWarpForLast(const int F1Size, const int level);
     void FrontierDebug(const int FSize, const int level);
     void markDegree();
 

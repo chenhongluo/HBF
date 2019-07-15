@@ -66,9 +66,11 @@ void GraphSSSP::BoostDijkstra(const int source) {
 
 	graph_traits < graph_t >::vertex_iterator vi, vend;
 	int i = 0;
+	printf("djistla: ");
 	for (boost::tie(vi, vend) = vertices(g); vi != vend; ++vi) {
 		if (d[*vi] != Distance[i++])
 			__ERROR("distance error");
+		//printf(" %d:",d[*vi]);
 	}
     BellmanFord_Queue_end();
 }

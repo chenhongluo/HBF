@@ -29,20 +29,24 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using namespace kernels;
 
 #define __GLOBAL_DEVICE__ __global__
+#define NAME0 chl_kernel
 #define NAME1 BF_Kernel1
 
 #include "WorkEfficient_KernelMain.cu"
 
 #undef __GLOBAL_DEVICE__
 #undef NAME1
+#undef NAME0
 
 #define __GLOBAL_DEVICE__ __device__ __forceinline__
 #define NAME1 BF_KernelD1
+#define NAME0 hh_kernel
 
 #include "WorkEfficient_KernelMain.cu"
 
 #undef __GLOBAL_DEVICE__
 #undef NAME1
+#undef NAME0
 
 __global__ void BFSDispath(	edge_t* __restrict__ devNodes,
 							int2* __restrict__ devEdges,

@@ -29,6 +29,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 	#include <vector_types.h>	//int2
 #endif
 #include <type_traits>
+#include<queue>
 
 namespace printExt {
 namespace host {
@@ -50,6 +51,23 @@ inline void printArray(T Array[], const int size, std::string text, const char s
 
     for (int i = 0; i < size; i++)
         std::cout << ((Array[i] == inf) ? "inf" : std::to_string(Array[i])) << sep;
+	std::cout << std::endl << std::endl;
+}
+
+//TODO::chl
+template<class T>
+inline void printQueue(std::queue<T>& q,std::string text)
+{
+	std::queue<T> q1;
+	std::cout << text;
+	while (!q.empty())
+	{
+		T t = q.front();
+		q.pop();
+		std::cout << t << " ";
+		q1.push(t);
+	}
+	q = q1;
 	std::cout << std::endl << std::endl;
 }
 

@@ -10,9 +10,20 @@ message("\nTest on cmake v" ${CMAKE_VERSION} "  System: " ${CMAKE_SYSTEM} "\n")
 include(CheckCXXCompilerFlag)
 CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
 if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	#debug options
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -g")
+	else()
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+	endif()
 else()
     message(FATAL_ERROR "Compiler ${CMAKE_CXX_COMPILER} has no C++11 support.")
+endif()
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+#debug options
+set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-g" "-G")
+# set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g")
 endif()
 
 if(CUDA_VERSION_MAJOR LESS 7)
@@ -24,7 +35,7 @@ endif()
 set(XLIB_DIR    ${PROJECT_SOURCE_DIR}/XLib)
 
 include_directories(${PROJECT_SOURCE_DIR}/include/
-                    ${PROJECT_SOURCE_DIR}/cub-1.4.1/
+                    ${PROJECT_SOURCE_DIR}/cub-1.8.1/
                     ${XLIB_DIR}/
                     ${XLIB_DIR}/Graph/
 )
@@ -86,6 +97,7 @@ set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
 set(CUDA_NVCC_FLAGS "-std=c++11" "-Xcompiler=-O3" "-w")
+#set(CUDA_NVCC_FLAGS "-std=c++11" "-ftz=true" "-Xcompiler" "-rdynamic" "-lineinfo" "-w")
 
 set(SM "" CACHE STRING "number_of_SM")
 set(ARCH "" CACHE STRING "architectures")
@@ -130,7 +142,7 @@ endif()
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 #debug options
 set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-g" "-G")
-set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g")
+# set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-g")
 endif()
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release")
@@ -139,6 +151,9 @@ set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS} "-use_fast_math" "-Xcompiler=-O3,-march=n
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -funroll-loops")
 endif()
 # ------------------------------------------------------------------------------
+
+MESSAGE( STATUS "this var key = ${CMAKE_CXX_FLAGS}.")
+MESSAGE( STATUS "this var key = ${CUDA_NVCC_FLAGS}.")
 
 find_library(
 	DEVRT_LIBRARY cudadevrt

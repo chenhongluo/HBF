@@ -72,14 +72,15 @@ cudaGraph::~cudaGraph() {
 }
 
 void cudaGraph::copyToDevice() {
+	printf("\ncopy0");
 	cudaMemcpy(devOutNodes, graph.OutNodes, (graph.V + 1) * sizeof(edge_t), cudaMemcpyHostToDevice);
 	cudaMemcpy(devOutEdges, graph.OutEdges, graph.E * sizeof(node_t), cudaMemcpyHostToDevice);
-
+	printf("\ncopy1");
     if (inverse_graph) {
         cudaMemcpy(devInNodes, graph.InNodes, (graph.V + 1) * sizeof(edge_t), cudaMemcpyHostToDevice);
         cudaMemcpy(devInEdges, graph.InEdges, graph.E * sizeof(node_t), cudaMemcpyHostToDevice);
     }
-
+	printf("\ncopy2");
 	if ((degree_options & IN_DEGREE) && (degree_options & OUT_DEGREE)) {
 		int2* tmpInOutDegrees = new int2[graph.V];
 		for (int i = 0; i < graph.V; i++)
@@ -92,7 +93,7 @@ void cudaGraph::copyToDevice() {
 		cudaMemcpy(devInDegrees, graph.InDegrees, graph.V * sizeof(degree_t), cudaMemcpyHostToDevice);
 	else if (degree_options & OUT_DEGREE)
 		cudaMemcpy(devOutDegrees, graph.OutDegrees, graph.V * sizeof(degree_t), cudaMemcpyHostToDevice);
-
+	printf("\ncopy3");
 	__CUDA_ERROR("Graph Copy To Device");
 }
 

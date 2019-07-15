@@ -94,7 +94,7 @@ struct WarpExclusiveScan {
     template<typename T>
     static __device__ __forceinline__ void Add(T& value, T* pointer);
 
-    template<typename T>
+    template<typename T = int >
     static __device__ __forceinline__ T AddAtom(T& value, T* pointer);
 
     //template<typename T>

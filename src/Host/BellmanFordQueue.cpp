@@ -26,11 +26,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * federico.busato@univr.it
  */
 #include "Host/GraphSSSP.hpp"
+#include "../../config.cuh"
 #include <queue>
 
 void GraphSSSP::BellmanFord_Queue_init() {
 	Distance = new dist_t[V];
     BellmanFord_Queue_reset();
+	//printExt::host::printArray(Distance, V, "init dis:");
 }
 
 void GraphSSSP::BellmanFord_Queue_end() {
@@ -71,23 +73,44 @@ void GraphSSSP::BellmanFord_Frontier(const node_t source, std::vector<int>& Fron
 
 	int level = 0, visited = 0;
 	while (Queue1.size() > 0) {
+		if (CUDA_DEBUG >= 2)
+		{
+			if (level < DEBUG_LEVEL)
+			{
+				printf("%s=%d\t", "host_frontier_level:", level);
+				printExt::host::printQueue<node_t>(Queue1, " ");
+				//printExt::host::printArray(Distance, V, "test_dis:");
+			}
 
-		Frontiers.push_back(Queue1.size());
+		}
+
+
 		while (Queue1.size() > 0) {
 			const node_t next = Queue1.front();
 			Queue1.pop();
 			visited++;
 			for (int i = OutNodes[next]; i < OutNodes[next + 1]; i++) {
 				const node_t dest = OutEdges[i];
-                if (level == 1)
-                    std::cout << "(" << next << "," << dest << ") -> " << Weights[i] << std::endl;
+                /*if (level == 1)
+                    std::cout << "(" << next << "," << dest << ") -> " << Weights[i] << std::endl;*/
 				if (Relax(next, dest, Weights[i], Distance))
 					Queue2.push(dest);
 			}
 		}
+
 		if (Queue2.size() > 0) {
 			level++;
 			Frontiers.push_back(Queue2.size());
+			//chl TODO
+			if (CUDA_DEBUG >= 2)
+			{
+				if (level < DEBUG_LEVEL)
+				{
+					printf("%s=%d\t", "host_frontier_level:", level);
+					printExt::host::printQueue<node_t>(Queue2, " ");
+					//printExt::host::printArray(Distance, V, "test_dis:");
+				}
+			}
 		}
 
 		while (Queue2.size() > 0) {
@@ -96,15 +119,19 @@ void GraphSSSP::BellmanFord_Frontier(const node_t source, std::vector<int>& Fron
 			visited++;
 			for (int i = OutNodes[next]; i < OutNodes[next + 1]; i++) {
 				const node_t dest = OutEdges[i];
-                if (level == 1)
-                    std::cout << "(" << next << "," << dest << ") -> " << Weights[i] << std::endl;
+                /*if (level == 1)
+                    std::cout << "(" << next << "," << dest << ") -> " << Weights[i] << std::endl;*/
 				if (Relax(next, dest, Weights[i], Distance))
 					Queue1.push(dest);
 			}
 		}
 		if (Queue1.size() > 0)
+		{
 			level++;
+			Frontiers.push_back(Queue1.size());
+		}
 	}
+	//printf("%s=%d\t", "host frontier & level_all:", level);
 }
 
 
