@@ -25,9 +25,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Univerity of Verona, Dept. of Computer Science
  * federico.busato@univr.it
  */
-#include "XLib.hpp"
-#include "Host/GraphSSSP.hpp"
-#include "Device/HBFGraph.cuh"
+
+#include <../config.cuh>
+#include <XLib.hpp>
+#include <Host/GraphSSSP.hpp>
+#include <Device/cudaOverlayGraph.cuh>
+using namespace cuda_graph;
 
 int main(int argc, char** argv) {
 	if (argc < 2)
@@ -42,17 +45,20 @@ int main(int argc, char** argv) {
     GraphSSSP graph(V, E, edgeType);
     graph.read(argv[1], nof_lines);
 
-    printf("dev graph init\n");
-
-    HBFGraph devGraph(graph, false, IN_DEGREE_OPT | OUT_DEGREE_OPT);
-
+    GraphWeight& gw=graph;
+    printf("init PreDeal\n");
+    GraphPreDeal gp(gw);
+    printf("start PreDeal\n");
+    PreDealGraph(gp);
+    printf("end PreDeal\n");
+    cudaGNRGraph gnr(gp,ALL_LEVELS,upSearchStrategy,downSearchStrategy);
     printf("\nmalloc devgraph");
-
-    devGraph.copyToDevice();
-
+    gnr.cudaMallocMem();
+    __CUDA_ERROR("malloc");
     printf("\ncopy to device");
-
-    devGraph.WorkEfficient();
+    gnr.cudaCopyMem();
+    __CUDA_ERROR("copy");
+    gnr.WorkEfficient(gw);
 
    // graph.DijkstraSET(0);
 

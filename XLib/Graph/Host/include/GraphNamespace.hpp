@@ -26,8 +26,9 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * federico.busato@univr.it
  */
 #pragma once
-
-#include "vector_types.h"
+#include <Base/Base.hpp>
+#include <vector_types.h>
+#include <vector_functions.hpp>
 
 namespace graph {
 	enum class	    EdgeType { DIRECTED, UNDIRECTED, UNDEF_EDGE_TYPE };
@@ -40,6 +41,11 @@ namespace graph {
     using degree_t = int;
 	using dist_t   = int;
     using weight_t = int;
+
+    // struct int2{int x, int y};
+    // struct int3{int x, int y, int z};
+    // struct int4{int x, int y, int z, int w};
+    //for vs code
 
     void readHeader(const char* File, int &V, int &E, int &nof_lines);
     void readHeader(const char* File, int &V, int &E, int &nof_lines, EdgeType& edgeType);

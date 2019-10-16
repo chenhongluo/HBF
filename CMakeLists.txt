@@ -52,8 +52,8 @@ if (Boost_FOUND)
     set(BOOST_FLAG -DBOOST_FOUND)
 endif()
 
-set(DEVICE_SRC 	    ${PROJECT_SOURCE_DIR}/src/Device/HBFGraph.cu
-                    ${PROJECT_SOURCE_DIR}/src/Device/DegreeMarker.cu
+set(DEVICE_SRC 	    ${PROJECT_SOURCE_DIR}/src/Device/cudaOverlayGraph.cu
+                    ${PROJECT_SOURCE_DIR}/src/Device/GNR_KernelMain.cu
                     ${PROJECT_SOURCE_DIR}/src/Device/WorkEfficient.cu
 )
 
@@ -61,20 +61,19 @@ set(HOST_UTIL_SRC 	${XLIB_DIR}/Base/Host/src/fUtil.cpp
                     ${XLIB_DIR}/Base/Host/src/Timer.cpp
                     ${XLIB_DIR}/Graph/Host/src/readHeader.cpp
                     ${XLIB_DIR}/Graph/Host/src/GraphBase.cpp
+                    ${XLIB_DIR}/Graph/Host/src/GraphCSRMerge.cpp
                     ${XLIB_DIR}/Graph/Host/src/GraphDegree.cpp
                     ${XLIB_DIR}/Graph/Host/src/GraphDegree_Read.cpp
-                    ${XLIB_DIR}/Graph/Host/src/GraphSTD.cpp
-                    ${XLIB_DIR}/Graph/Host/src/GraphSTD_Read.cpp
-                    ${XLIB_DIR}/Graph/Host/src/GraphSTD_BFS.cpp
-                    ${XLIB_DIR}/Graph/Host/src/GraphWeight.cpp
                     ${XLIB_DIR}/Graph/Host/src/GraphWeight_Read.cpp
+                    ${XLIB_DIR}/Graph/Host/src/GraphWeight.cpp
+                    ${XLIB_DIR}/Graph/Host/src/OverlayGraph.cpp
+                    ${XLIB_DIR}/Graph/Host/src/GraphPreDeal.cpp
 )
 
 set(DEVICE_UTIL_SRC ${XLIB_DIR}/Base/Device/Util/src/cuda_util.cu
                     ${XLIB_DIR}/Base/Device/Util/src/global_sync.cu
                     ${XLIB_DIR}/Base/Device/Util/src/Timer.cu
-                    ${XLIB_DIR}/Graph/Device/src/cudaGraph.cu
-                    ${XLIB_DIR}/Graph/Device/src/cudaGraphWeight.cu
+                    ${XLIB_DIR}/Graph/Device/src/cudaGraphPreDeal.cu
 )
 
 #set(HOST_W_FLAGS "-Wall -Wextra")
@@ -96,8 +95,8 @@ set(DEVICE_UTIL_SRC ${XLIB_DIR}/Base/Device/Util/src/cuda_util.cu
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
-set(CUDA_NVCC_FLAGS "-std=c++11" "-Xcompiler=-O3" "-w")
-#set(CUDA_NVCC_FLAGS "-std=c++11" "-ftz=true" "-Xcompiler" "-rdynamic" "-lineinfo" "-w")
+#set(CUDA_NVCC_FLAGS "-std=c++11" "-Xcompiler=-O3" "-w")
+set(CUDA_NVCC_FLAGS "-std=c++11" "-ftz=true" "-Xcompiler" "-rdynamic" "-lineinfo" "-w")
 
 set(SM "" CACHE STRING "number_of_SM")
 set(ARCH "" CACHE STRING "architectures")
@@ -120,11 +119,20 @@ elseif (ARCH STREQUAL "50")
 elseif (ARCH STREQUAL "52")
 	message("\nGPU architecture: 5.2\n")
 	list(APPEND CUDA_NVCC_FLAGS "-arch=sm_52" "-DARCH=520")
+elseif (ARCH STREQUAL "61")
+	message("\nGPU architecture: 6.1\n")
+	list(APPEND CUDA_NVCC_FLAGS "-arch=sm_61" "-DARCH=610")
 elseif (ARCH STREQUAL "53")
 	message("\nGPU architecture: 5.3\n")
 	list(APPEND CUDA_NVCC_FLAGS "-arch=sm_53" "-DARCH=530")
+elseif (ARCH STREQUAL "70")
+	message("\nGPU architecture: 7.0\n")
+	list(APPEND CUDA_NVCC_FLAGS "-arch=sm_70" "-DARCH=700")
+elseif (ARCH STREQUAL "75")
+	message("\nGPU architecture: 7.5\n")
+	list(APPEND CUDA_NVCC_FLAGS "-arch=sm_75" "-DARCH=750")
 else()
-	message(FATAL_ERROR "\nplease select GPU architecture: \"cmake -DARCH=[ 30 | 32 | 35 | 37 | 50 | 52 | 53 ]\"")
+	message(FATAL_ERROR "\nplease select GPU architecture: \"cmake -DARCH=[ 30 | 32 | 35 | 37 | 50 | 52 | 53 | 70]\"")
 endif()
 
 # ------------------------------------------------------------------------------

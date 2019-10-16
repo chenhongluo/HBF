@@ -141,7 +141,12 @@ void getDimacs10Header(std::ifstream& fin, node_t &V, int &nof_lines, EdgeType &
 	std::string str;
 	fin >> V >> nof_lines >> str;
 	FileDirection = str.compare("100") == 0 ? EdgeType::DIRECTED : EdgeType::UNDIRECTED;
-    //FileAttributeType = AttributeType::BINARY;
+    if(FileDirection == EdgeType::UNDIRECTED)
+	{
+		nof_lines *=2;
+		FileDirection = EdgeType::DIRECTED;
+	}
+	//FileAttributeType = AttributeType::BINARY;
 }
 
 void getSnapHeader(std::ifstream& fin, int &V, int &nof_lines, EdgeType& FileDirection) {

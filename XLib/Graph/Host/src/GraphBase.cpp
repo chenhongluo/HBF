@@ -26,7 +26,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * federico.busato@univr.it
  */
 #include <iostream>
-#include "XLib.hpp"
 #include "../include/GraphBase.hpp"
 
 namespace graph {

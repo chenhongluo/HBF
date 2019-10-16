@@ -81,8 +81,17 @@ struct Max_SMem_Per_Block {
 			const int RESIDENT_BLOCKS_PER_SM = 32;
 		//#endif
 		//TODO chl
+		#elif __CUDA_ARCH__ == 610 || ARCH == 610
+			#pragma message("\n\nCompute Capability: 6.1\n")
+			const int SMEM_PER_SM = 49152;
+			const int RESIDENT_BLOCKS_PER_SM = 32;
+		#elif __CUDA_ARCH__ == 700 || ARCH == 700
+		#pragma message("\n\nCompute Capability: 7.0\n")
+		const int SMEM_PER_SM = 49152;
+		const int RESIDENT_BLOCKS_PER_SM = 32;
+
 		#elif __CUDA_ARCH__ == 750 || ARCH == 750
-		#pragma message("\n\nCompute Capability: 5.3\n")
+		#pragma message("\n\nCompute Capability: 7.5\n")
 		const int SMEM_PER_SM = 49152;
 		const int RESIDENT_BLOCKS_PER_SM = 16;
 		#endif

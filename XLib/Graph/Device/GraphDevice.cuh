@@ -25,6 +25,4 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Univerity of Verona, Dept. of Computer Science
  * federico.busato@univr.it
  */
-#include "include/cudaGraphNamespace.cuh"
-#include "include/cudaGraph.cuh"
-#include "include/cudaGraphWeight.cuh"
+#include "include/cudaGraphPreDeal.cuh"

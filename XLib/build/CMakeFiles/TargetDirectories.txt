@@ -1,4 +1,0 @@
-/storage/fbusato/lib/XLib/build/CMakeFiles/XLib_sm30.dir
-/storage/fbusato/lib/XLib/build/CMakeFiles/XLib_sm35.dir
-/storage/fbusato/lib/XLib/build/CMakeFiles/XLib_sm52.dir
-/storage/fbusato/lib/XLib/build/CMakeFiles/clean-all.dir

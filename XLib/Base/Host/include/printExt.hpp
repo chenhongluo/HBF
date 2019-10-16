@@ -30,9 +30,47 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <string>
 #include <limits>
+#include <vector_types.h>
+#include <vector_functions.hpp>
+#include <vector>
+using std::vector;
 #if __NVCC__
     #include <cuda_runtime.h>
     #include "../../Device/BaseDevice.cuh"
+
+	template<typename T>
+inline void copyVecTo(T* dest,vector<T>& source)
+{
+    cudaMemcpy(dest, 
+    &(source[0]), 
+    (source.size()) * sizeof(T),
+    cudaMemcpyHostToDevice);
+}
+
+template<typename T>
+inline void copyVecFrom(T* source,vector<T>& dest)
+{
+    cudaMemcpy(&(dest[0]), 
+    source, 
+    (dest.size()) * sizeof(T),
+    cudaMemcpyDeviceToHost);
+}
+
+inline void copyIntTo(int *dest,int source)
+{
+    cudaMemcpy(dest, 
+    &source, 
+    1 * sizeof(int),
+    cudaMemcpyHostToDevice);
+}
+
+inline void copyIntFrom(int* source,int* dest)
+{
+    cudaMemcpy(dest, 
+    source, 
+    1 * sizeof(int),
+    cudaMemcpyDeviceToHost);
+}
 #endif
 
 namespace std {
@@ -86,5 +124,56 @@ void printArray<int3>(int3 Array[], const int size, std::string text, const char
 } //@device
 #endif
 } //@printExt
+
+inline void printVector(vector<int> &t,int n)
+{
+	int k = n<t.size()?n:t.size();
+	for(int i=0;i<k;i++)
+	{
+		std::cout<<t[i]<<"\n";
+	}
+	printf("\n");
+}
+
+inline void printVector(vector<int2> &t,int n)
+{
+	int k = n<t.size()?n:t.size();
+	for(int i=0;i<k;i++)
+	{
+		std::cout<<t[i].x<<" "<<t[i].y<<"\n";
+	}
+	printf("\n");
+}
+inline void printVector(vector<int3> &t,int n)
+{
+	int k = n<t.size()?n:t.size();
+	for(int i=0;i<k;i++)
+	{
+		std::cout<<t[i].x<<" "<<t[i].y<<" "<<t[i].z<<"\n";
+	}
+	printf("\n");
+}
+
+
+
+inline void printStr(char* s)
+{
+	printf("%s\n",s);
+}
+
+inline void printInt(int n)
+{
+	printf("%d\n",n);
+}
+
+inline void printInt2(int2 x)
+{
+	printf("%d,%d\n",x.x,x.y);
+}
+
+inline void printInt3(int3 x)
+{
+	printf("%d,%d,%d\n",x.x,x.y,x.z);
+}
 
 #include "impl/printExt.i.hpp"

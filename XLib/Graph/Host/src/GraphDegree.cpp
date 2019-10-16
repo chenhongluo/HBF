@@ -27,7 +27,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <exception>
 #include "../include/GraphDegree.hpp"
-#include "XLib.hpp"
 
 namespace graph {
 

@@ -25,61 +25,44 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Univerity of Verona, Dept. of Computer Science
  * federico.busato@univr.it
  */
-#include "Device/WorkEfficient_KernelFun.cuh"
-using namespace kernels;
+// #include <Device/PreDeal_KernelFun.cuh>
+// #include <Device/GNR_KernelFun.cuh>
 
-#define __GLOBAL_DEVICE__ __global__
-#define NAME0 chl_kernel
-#define NAME1 BF_Kernel1
+// using namespace Kernels;
 
-#include "WorkEfficient_KernelMain.cu"
 
-#undef __GLOBAL_DEVICE__
-#undef NAME1
-#undef NAME0
+// __global__ void BFSDispath(	edge_t* __restrict__ devNodes,
+// 							int2* __restrict__ devEdges,
+// 							hdist_t* __restrict__ devDistances,
+// 							node_t* devF1,
+// 							node_t* devF2) {
 
-#define __GLOBAL_DEVICE__ __device__ __forceinline__
-#define NAME1 BF_KernelD1
-#define NAME0 hh_kernel
+// 	int devF1SizeLocal = 1;
+// 	int level = 1;
+// 	int* devF2SizePrt = devF2Size + (level & 3);
 
-#include "WorkEfficient_KernelMain.cu"
+// 	while (devF1SizeLocal) {
+//         if (blockIdx.x == 0 && threadIdx.x == 0)
+//             devF2Size[(level + 1) & 3] = 0;
 
-#undef __GLOBAL_DEVICE__
-#undef NAME1
-#undef NAME0
+//         int size = basic::log2(RESIDENT_THREADS / devF1SizeLocal);
+//     	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
+//     		size = LOG2<MIN_VW>::value;
+//     	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
+//     		size = LOG2<MAX_VW>::value;
 
-__global__ void BFSDispath(	edge_t* __restrict__ devNodes,
-							int2* __restrict__ devEdges,
-							hdist_t* __restrict__ devDistances,
-							node_t* devF1,
-							node_t* devF2) {
+//         #define fun(a)	BF_KernelD1<a, true>(devNodes, devEdges, devDistances,\
+//                                              devF1, devF2, devF1SizeLocal, level);
 
-	int devF1SizeLocal = 1;
-	int level = 1;
-	int* devF2SizePrt = devF2Size + (level & 3);
+//         def_SWITCH(size);
 
-	while (devF1SizeLocal) {
-        if (blockIdx.x == 0 && threadIdx.x == 0)
-            devF2Size[(level + 1) & 3] = 0;
+//         #undef fun
 
-        int size = basic::log2(RESIDENT_THREADS / devF1SizeLocal);
-    	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
-    		size = LOG2<MIN_VW>::value;
-    	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
-    		size = LOG2<MAX_VW>::value;
+// 		global_sync::GlobalSync<BLOCKDIM>();
 
-        #define fun(a)	BF_KernelD1<a, true>(devNodes, devEdges, devDistances,\
-                                             devF1, devF2, devF1SizeLocal, level);
-
-        def_SWITCH(size);
-
-        #undef fun
-
-		global_sync::GlobalSync<BLOCKDIM>();
-
-		devF1SizeLocal = devF2SizePrt[0];
-		level++;
-		devF2SizePrt = devF2Size + (level & 3);
-        basic::swap(devF1, devF2);
-	}
-}
+// 		devF1SizeLocal = devF2SizePrt[0];
+// 		level++;
+// 		devF2SizePrt = devF2Size + (level & 3);
+//         basic::swap(devF1, devF2);
+// 	}
+// }

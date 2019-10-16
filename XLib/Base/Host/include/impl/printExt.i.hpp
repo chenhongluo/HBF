@@ -45,6 +45,7 @@ namespace host {
     }
 #endif
 
+
 template<class T>
 inline void printArray(T Array[], const int size, std::string text, const char sep, T inf) {
 	std::cout << text;

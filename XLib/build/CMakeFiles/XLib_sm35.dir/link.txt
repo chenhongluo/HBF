@@ -1,2 +1,0 @@
-/usr/bin/ar cq libXLib_sm35.a  CMakeFiles/XLib_sm35.dir/src/fUtil.cpp.o CMakeFiles/XLib_sm35.dir/src/Numeric.cpp.o CMakeFiles/XLib_sm35.dir/src/Timer.cpp.o CMakeFiles/XLib_sm35.dir/src/Cuda/XLib_sm35_generated_Timer.cu.o CMakeFiles/XLib_sm35.dir/src/Cuda/XLib_sm35_generated_cuda_util.cu.o
-/usr/bin/ranlib libXLib_sm35.a

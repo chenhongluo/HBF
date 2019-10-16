@@ -28,6 +28,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "../../../../Host/BaseHost.hpp"
 #include "../../../Util/Util.cuh"
 #include <cub/cub.cuh>
+#include <cooperative_groups.h>
+
 
 namespace primitives {
 
@@ -159,6 +161,55 @@ namespace primitives {
 	//------------------------------------------------------------------------------
 
 	//!!!!!!!!! to improve
+
+//write by chl
+	template<int VW_SIZE,typename T>
+	__device__ __forceinline__
+	void VWExclusiveScanAdd(const T& value,T &sum)
+	{
+		cooperative_groups::thread_block_tile<VW_SIZE> tile = cooperative_groups::tiled_partition<VW_SIZE>(cooperative_groups::this_thread_block());
+		sum = value;
+		for(int i=1;i<=tile.size()/2;i*=2)
+		{
+			T n = tile.shfl_up(sum, i);
+			if (tile.thread_rank() >= i)
+			{
+				sum += n;
+			}
+		}
+		sum -= value;
+	}
+
+	template<int VW_SIZE,typename T>
+	__device__ __forceinline__
+	void VWExclusiveScanAdd(cooperative_groups::thread_block_tile<VW_SIZE>& tile,const T& value,T& sum)
+	{
+		sum = value;
+		for(int i=1;i<=tile.size()/2;i*=2)
+		{
+			T n = tile.shfl_up(sum, i);
+			if (tile.thread_rank() >= i)
+			{
+				sum += n;
+			}
+		}
+		sum -= value;
+	}
+
+	template<int VW_SIZE,typename T>
+	__device__ __forceinline__
+	void VWInclusiveScanAdd(cooperative_groups::thread_block_tile<VW_SIZE>& tile,const T& value,T& sum)
+	{
+		sum = value;
+		for(int i=1;i<=tile.size()/2;i*=2)
+		{
+			T n = tile.shfl_up(sum, i);
+			if (tile.thread_rank() >= i)
+			{
+				sum += n;
+			}
+		}
+	}	
 
 	template<int WARP_SZ>
 	template<typename T>

@@ -17,6 +17,8 @@ $ make -j
 
 example:
 $ cmake -DARCH=35 -DSM=12 ..
+$ cmake -DARCH=61 -DSM=9 -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DARCH=70 -DSM=68 -DCMAKE_BUILD_TYPE=Debug ..
 
 --------------------------------------------
 USAGE

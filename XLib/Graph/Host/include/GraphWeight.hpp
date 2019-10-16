@@ -27,16 +27,17 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #pragma once
 
-#include <vector>
-#include <map>
-#include "GraphSTD.hpp"
+#include "GraphDegree.hpp"
 #include "../../../Base/Host/BaseHost.hpp"
 
-namespace graph {
+#include <vector>
+#include <map>
+using std::vector;
 
-	class GraphWeight : public GraphSTD {
-	private:
-        void readMatrixMarket(std::ifstream& fin, const int nof_lines);
+namespace graph {
+	class GraphWeight : public GraphDegree {
+	protected:
+       void readMatrixMarket(std::ifstream& fin, const int nof_lines);
         void readDimacs9(std::ifstream& fin,const int nof_lines);
         void readDimacs10(std::ifstream& fin);
         void readSnap(std::ifstream& fin, const int nof_lines);
@@ -46,12 +47,21 @@ namespace graph {
         bool dimacs9;
 
 	public:
+    	edge_t *OutNodes, *InNodes;
+		node_t *OutEdges, *InEdges;
+		degree_t *InDegrees;//*OutDegrees
+        int3* OriginEdges;
+        int TriSize;
         weight_t* Weights;
+        weight_t* InWeights;
+
 		GraphWeight(const int _V, const int _E, const EdgeType _edgeType);
         ~GraphWeight();
 
         void read(const char* File, const int nof_lines);
-
 		void toBinary( const char* File );
+
+		void DegreeAnalisys();
+		void print();
 	};
 }

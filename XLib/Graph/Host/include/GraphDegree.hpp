@@ -28,7 +28,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #pragma once
 
 #include "GraphBase.hpp"
-#include "GraphNamespace.hpp"
 
 namespace graph {
 
@@ -49,7 +48,6 @@ public:
 
 	GraphDegree(const node_t _V, const edge_t _E, const EdgeType _Direction);
     ~GraphDegree();
-
 	virtual void print();
 	virtual void DegreeAnalisys();
 };

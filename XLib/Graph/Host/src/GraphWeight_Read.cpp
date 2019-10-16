@@ -26,32 +26,141 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * federico.busato@univr.it
  */
 #include "../include/GraphWeight.hpp"
-#include "XLib.hpp"
+#include <sstream>
+#include <iterator>
+#include <algorithm>
+
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/mman.h>
+
+using namespace fUtil;
+
+unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+static std::default_random_engine generator(seed);
+static std::uniform_int_distribution<int> distribution (1, 100);
 
 namespace graph {
 
 void GraphWeight::read(const char* File, const int nof_lines) {
-    dimacs9 = false;
-    GraphBase::read(File, nof_lines);
-
-    if (!dimacs9) {
-        unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-        std::default_random_engine generator(seed);
-        std::uniform_int_distribution<weight_t> distribution (1, 100);
-        std::generate(Weights, Weights + E, [&](){ return distribution(generator); });
-    }
+	GraphBase::read(File, nof_lines);
 }
 
 void GraphWeight::readMatrixMarket(std::ifstream& fin, const int nof_lines) {
-    GraphSTD::readMatrixMarket(fin, nof_lines);
+	fUtil::Progress progress(nof_lines);
+
+	while (fin.peek() == '%')
+		fileUtil::skipLines(fin);
+	fileUtil::skipLines(fin);
+
+	for (int lines = 0; lines < nof_lines; ++lines) {
+		node_t index1, index2;
+		fin >> index1 >> index2;
+
+		OriginEdges[lines].x = index1 - 1;
+        OriginEdges[lines].y = index2 - 1;
+		OriginEdges[lines].z = distribution(generator);
+
+		progress.next(lines + 1);
+		fileUtil::skipLines(fin);
+	}
+	TriSize = nof_lines;
+
+    ToCSR();
 }
+
 
 void GraphWeight::readDimacs10(std::ifstream& fin) {
-	GraphSTD::readDimacs10(fin);
+	fUtil::Progress progress(V);
+	while (fin.peek() == '%')
+		fileUtil::skipLines(fin);
+	fileUtil::skipLines(fin);
+
+    OutNodes[0] = 0;
+	int countEdges = 0;
+	for (int lines = 0; lines < V; lines++) {
+		std::string str;
+		std::getline(fin, str);
+
+		std::istringstream stream(str);
+		std::istream_iterator<std::string> iis(stream >> std::ws);
+
+		degree_t degree = std::distance(iis, std::istream_iterator<std::string>());
+        std::istringstream stream2(str);
+        for (int j = 0; j < degree; j++) {
+            node_t dest;
+            stream2 >> dest;
+            dest--;
+
+            OriginEdges[countEdges].x = lines;
+            OriginEdges[countEdges].y = dest;
+			OriginEdges[countEdges].z = distribution(generator);
+            countEdges++;
+        }
+        progress.next(lines + 1);
+	}
+	TriSize = countEdges;
+	ToCSR();
 }
 
+
 void GraphWeight::readSnap(std::ifstream& fin, const int nof_lines) {
-	GraphSTD::readSnap(fin, nof_lines);
+	fUtil::Progress progress(nof_lines);
+	while (fin.peek() == '#')
+		fileUtil::skipLines(fin);
+
+	fUtil::UniqueMap<node_t, node_t> Map;
+	for (int lines = 0; lines < nof_lines; lines++) {
+		node_t ID1, ID2;
+		fin >> ID1 >> ID2;
+
+		OriginEdges[lines].x = Map.insertValue(ID1);
+        OriginEdges[lines].y = Map.insertValue(ID2);
+		OriginEdges[lines].z = distribution(generator);
+
+		progress.next(lines + 1);
+	}
+	TriSize = nof_lines;
+    ToCSR();
+}
+
+
+void GraphWeight::readBinary(const char* File) {
+	const int fileSize = fileUtil::fileSize(File);
+	FILE *fp = fopen(File, "r");
+
+	int* memory_mapped = (int*) mmap(NULL, fileSize, PROT_READ, MAP_PRIVATE, fp->_fileno, 0);
+	if (memory_mapped == MAP_FAILED)
+		__ERROR("memory_mapped error");
+	madvise(memory_mapped, fileSize, MADV_SEQUENTIAL);
+	fUtil::Progress progress(fileSize);
+
+	memory_mapped += 3;
+
+	std::copy(memory_mapped, memory_mapped + V + 1, OutNodes);
+	progress.perCent(V + 1);
+	memory_mapped += V + 1;
+
+	std::copy(memory_mapped, memory_mapped + V + 1, InNodes);
+	progress.perCent((V + 1) * 2);
+	memory_mapped += V + 1;
+
+	std::copy(memory_mapped, memory_mapped + V, OutDegrees);
+	progress.perCent((V + 1) * 2 + V);
+	memory_mapped += V;
+
+	std::copy(memory_mapped, memory_mapped + V, InDegrees);
+	progress.perCent((V + 1) * 2 + V * 2);
+	memory_mapped += V;
+
+	std::copy(memory_mapped, memory_mapped + E, OutEdges);
+	progress.perCent((V + 1) * 2 + V * 2 + E);
+	memory_mapped += E;
+
+	std::copy(memory_mapped, memory_mapped + E, InEdges);
+
+	munmap(memory_mapped, fileSize);
+	fclose(fp);
 }
 
 void GraphWeight::readDimacs9(std::ifstream& fin, const int nof_lines) {
@@ -65,16 +174,17 @@ void GraphWeight::readDimacs9(std::ifstream& fin, const int nof_lines) {
 			node_t index1, index2;
 			fin >> nil >> index1 >> index2 >> Weights[lines];
 
-            COO_Edges[lines][0] = index1 - 1;
-            COO_Edges[lines][1] = index2 - 1;
+            OriginEdges[lines].x = index1 - 1;
+        	OriginEdges[lines].y = index2 - 1;
+			OriginEdges[lines].z = Weights[lines];
 
 			lines++;
 			progress.next(lines + 1);
 		}
 		fileUtil::skipLines(fin);
 	}
-	COOSize = lines;
-    GraphSTD::ToCSR();
+	TriSize = lines;
+    ToCSR();
     dimacs9 = true;
 }
 
@@ -83,10 +193,6 @@ void GraphWeight::readDimacs9(std::ifstream& fin, const int nof_lines) {
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/mman.h>
-
-void GraphWeight::readBinary(const char* File) {
-
-}
 
 #endif
 

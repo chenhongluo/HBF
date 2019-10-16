@@ -27,33 +27,37 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #ifndef _CONFIG_H
 #define _CONFIG_H
+#include <vector>
+using std::vector;
 
- 
+const unsigned			GRIDDIM = 128; 
 const unsigned      	BLOCKDIM = 256;
 const int             N_OF_TESTS = 100;
 const bool CHECK_TRAVERSED_EDGES = false;
-const bool          CHECK_RESULT = false;
+const bool          CHECK_RESULT = true;
 const int            CUDA_DEBUG = 0;
 const int			 DEBUG_LEVEL = 3;
+//------------------------------------------------------------------------------
+
+#define MAXSUPLEVEL 100
+
+const int selectNodesStrategy = 1;
+const int ALL_LEVELS = 10;
+const vector<int> selectNodesNum = {200000,200000,10000,10000,10000,10000,10000,10000,10000,10000};
+// const int ALL_LEVELS = 1;
+// const vector<int> selectNodesNum = {0,200000,10000,10000,10000,10000,10000,10000,10000,10000};
+
+const vector<int> upSearchStrategy = {10};
+const vector<int> downSearchStrategy = {10}; 
+
 // -----------------------------------------------------------------------------
 
 #define          ATOMIC64	true    // optimization
 
-const bool           SAFE = true;
-const bool    GLOBAL_SYNC = false;   //road network
-
-const bool           RING = true;   // avoid ring
-const int  OUT_DEGREE_OPT = 0;      // out-degree optimization  // 0 disable, 1 enable
-//distances of vertices with out-degree equal to 1 are not corretted
-const int   IN_DEGREE_OPT = 0;      // in-degree optimization   // 0 disable, 2 enable
-
 const int          MIN_VW = 4;      // minimum size of virtual warp (range [1, 32])
+const int		   DEFAULT_VW = 8;
 const int          MAX_VW = 32;      // maximum size of virtual warp (range [1, 32])
 const int   ITEM_PER_WARP = 1;      // gridDim = RESIDENT_THREADS * ITEM_PER_WARP
-
-const bool DYNAMIC_PARALLELISM = false;  // enable dynamic parallelism
-const int          THRESHOLD_G = 4096;  // dynamic parallelism threshold
-const int          EDGE_PER_TH = 16;    // edges per thread computed by dynamic parallelism kernel
 
 //------------------------------------------------------------------------------
 
@@ -71,7 +75,7 @@ const int REG_LIMIT = 32;            // register size
 	#define MAKE_DIST(a,b)	( b )
 #endif
 
-static_assert(!DYNAMIC_PARALLELISM || !GLOBAL_SYNC,
-    "dynamic parallelism and global sync must not be enabled at the same time ");
+// static_assert(!DYNAMIC_PARALLELISM || !GLOBAL_SYNC,
+//     "dynamic parallelism and global sync must not be enabled at the same time ");
 
 #endif

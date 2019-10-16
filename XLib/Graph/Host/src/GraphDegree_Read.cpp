@@ -28,12 +28,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sstream>
 #include <iterator>
-#include <XLib.hpp>
 #include "../include/GraphDegree.hpp"
 
 namespace graph {
 
-void GraphDegree::readMatrixMarket(std::ifstream& fin, const int nof_lines) {
+void GraphDegree::readMatrixMarket(std::ifstream& fin, const int nof_lines)
+{
 	fUtil::Progress progress(nof_lines);
 
 	while (fin.peek() == '%')

@@ -25,10 +25,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * Univerity of Verona, Dept. of Computer Science
  * federico.busato@univr.it
  */
-#include "Device/HBFGraph.cuh"
-#include "XLib.hpp"
+#include <Device/cudaOverlayGraph.cuh>
+#include <../config.cuh>
+//#include "Kernels/WorkEfficient_KernelDispath.cu"
 
-#include "Kernels/WorkEfficient_KernelDispath.cu"
+#include <vector>
+
+using std::vector;
 
 namespace
 {
@@ -48,42 +51,38 @@ inline bool distanceCompare<int2>(dist_t A, int2 B)
 }
 } // namespace
 
-void HBFGraph::FrontierDebug(const int FSize, const int level)
-{
-	if (FSize > max_frontier_size)
-		__ERROR("Device memory not sufficient to contain the vertices frontier");
-	if (CUDA_DEBUG)
-	{
-		//__CUDA_ERROR("BellmanFord Host");
+// void cudaGNRGraph::FrontierDebug(const int FSize, const int level)
+// {
+// 	if (FSize > max_frontier_size)
+// 		__ERROR("Device memory not sufficient to contain the vertices frontier");
+// 	if (CUDA_DEBUG)
+// 	{
+// 		//__CUDA_ERROR("BellmanFord Host");
 
-		// std::cout << "level: " << level << "\tF2Size: " << FSize << std::endl;
-		if (CUDA_DEBUG >= 2)
-		{
-			if (level <= DEBUG_LEVEL)
-			{
-				node_t *tmpF1 = new node_t[graph.V * 10];
-				cudaMemcpy(tmpF1, devF1, FSize * sizeof(node_t), cudaMemcpyDeviceToHost);
-				printf("\n%s=%d\t", "cuda_frontier_level:", level);
-				printExt::host::printArray(tmpF1, FSize, " ");
-				delete[] tmpF1;
-			}
-		}
-	}
-}
-
-void HBFGraph::WorkEfficient()
+// 		// std::cout << "level: " << level << "\tF2Size: " << FSize << std::endl;
+// 		if (CUDA_DEBUG >= 2)
+// 		{
+// 			if (level <= DEBUG_LEVEL)
+// 			{
+// 				node_t *tmpF1 = new node_t[graph.V * 10];
+// 				cudaMemcpy(tmpF1, devF1, FSize * sizeof(node_t), cudaMemcpyDeviceToHost);
+// 				printf("\n%s=%d\t", "cuda_frontier_level:", level);
+// 				printExt::host::printArray(tmpF1, FSize, " ");
+// 				delete[] tmpF1;
+// 			}
+// 		}
+// 	}
+// }
+namespace cuda_graph {
+void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 {
-	int SizeArray[4];
+	//GraphSSSP& graph = (GraphSSSP&)gw;
 	long long int totalEdges = 0;
 	float totalTime = 0;
 	std::cout.setf(std::ios::fixed | std::ios::left);
 
-	printf("make degree");
-
-	this->markDegree();
-
 	timer::Timer<timer::HOST> TM_H;
-	timer_cuda::Timer<timer_cuda::DEVICE> TM_D;
+
 
 	unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator(seed);
@@ -94,30 +93,30 @@ void HBFGraph::WorkEfficient()
 	int *Sources = new int[1];
 			if (CHECK_RESULT)
 		{
-					dynamic_cast<GraphSSSP &>(graph).BellmanFord_Queue_init();
+			dynamic_cast<GraphSSSP &>(graph).BellmanFord_Queue_init();
 		}
 	for (int i = 0; i < N_OF_TESTS; i++)
 	{
-
+		timer_cuda::Timer<timer_cuda::DEVICE> TM_D;
 		Sources[0] = {N_OF_TESTS == 1 ? 0 : distribution(generator)};
 		//Sources[0] = 160413;
 
 		int edgeTraversed = graph.E;
-		if (CHECK_TRAVERSED_EDGES)
-		{
-			graph.BFS_Init();
-			graph.BFS(Sources[0]);
-			edgeTraversed = graph.BFS_visitedEdges();
-			graph.BFS_Reset();
+		// if (CHECK_TRAVERSED_EDGES)
+		// {
+		// 	graph.BFS_Init();
+		// 	graph.BFS(Sources[0]);
+		// 	edgeTraversed = graph.BFS_visitedEdges();
+		// 	graph.BFS_Reset();
 
-			if (edgeTraversed == 0 || (float)graph.E / edgeTraversed < 0.1f)
-			{
-				i--;
-				std::cout << "EdgeTraversed:" << edgeTraversed
-						  << " -> Repeat" << std::endl;
-				continue;
-			}
-		}
+		// 	if (edgeTraversed == 0 || (float)graph.E / edgeTraversed < 0.1f)
+		// 	{
+		// 		i--;
+		// 		std::cout << "EdgeTraversed:" << edgeTraversed
+		// 				  << " -> Repeat" << std::endl;
+		// 		continue;
+		// 	}
+		// }
 
 		//printf("host start\n");
 
@@ -140,56 +139,14 @@ void HBFGraph::WorkEfficient()
 			}
 		}
 
-		//printf("cuda start\n");
+		printf("cuda start\n");
+		printf("source id:%d\n",Sources[0]);
 
-		int level = 1, F1Size = 1, F2Size;
-		this->init(Sources);
-
-		//======================================================================
-
-		std::vector<int> cuda_frontiers;
-		int *last_nodes = new int[this->graph.V];
-		for (int i = 0; i < this->graph.V; i++)
-			last_nodes[i] = i;
 		TM_D.start();
-
-		do
-		{
-			cuda_frontiers.push_back(F1Size);
-			//printf("F1Size:%d",F1Size);
-			FrontierDebug(F1Size, level);
-			DynamicVirtualWarp(F1Size, level);
-
-			cudaMemcpyFromSymbol(SizeArray, devF2Size, sizeof(int) * 4);
-			F2Size = SizeArray[level & 3];
-			F1Size = F2Size;
-
-			level++;
-			std::swap<int *>(devF1, devF2);
-			maxFrontier = std::max(maxFrontier, F2Size);
-
-		} while (F2Size > 0);
-		// if (OUT_DEGREE_OPT)
-		// {
-		// 	printf("graph.V:%d\n", this->graph.V);
-
-		// 	F1Size = this->graph.V;
-		// 	cudaMemcpy(devF1, last_nodes, this->graph.V * sizeof(int), cudaMemcpyHostToDevice);
-		// 	DynamicVirtualWarpForLast(F1Size, level);
-		// 	//printf("delete\n");
-		// }
+		GNRSearchMain(Sources[0]);
+		__CUDA_ERROR("BellmanFord Kernel");
 
 		TM_D.stop();
-		delete[] last_nodes;
-		if (CUDA_DEBUG)
-		{
-			printf("cuda_frontiers_size = ");
-			for (int x : cuda_frontiers)
-			{
-				printf(" %d", x);
-			}
-			printf("\n");
-		}
 
 		//======================================================================
 
@@ -207,19 +164,28 @@ void HBFGraph::WorkEfficient()
 
 		if (CHECK_RESULT)
 		{
+			// printf("the %d test is ok", i);
 			dist_t *Dist = dynamic_cast<GraphSSSP &>(graph).BellmanFord_Result();
-			if (CUDA_DEBUG >= 3)
+			// if (CUDA_DEBUG >= 3)
+			// {
+			// 	printExt::host::printArray(Dist, graph.V, "host_distance:");
+			// 	printExt::host::printArray(devArray, graph.V, "cuda_distance:");
+			// 	delete[] devArray;
+			// }
+			vector<int> devDist(V);
+			copyDistance(devDist);
+			//printf("the %d test is ok", i);
+			int count_error=0;
+			for(int j=0;j<V;j++)
 			{
-				printExt::host::printArray(Dist, graph.V, "host_distance:");
-				int *devArray = new int[graph.V];
-				cudaMemcpy(devArray, devDistances, graph.V * sizeof(int), cudaMemcpyDeviceToHost);
-				printExt::host::printArray(devArray, graph.V, "cuda_distance:");
-				delete[] devArray;
+				if(devDist[j] != Dist[j])
+				{
+					count_error++;	// exit(-1);
+					//printf("%d not equal,dev:%d,host:%d,cha:%d\n",j,devDist[j],Dist[j],devDist[j]-Dist[j]);
+				}
 			}
-
-			cuda_util::Compare(Dist, devDistances, graph.V, distanceCompare);
-			printf("the %d test is ok", i);
-					dynamic_cast<GraphSSSP &>(graph).BellmanFord_Queue_reset();
+			printf("the %d test is %f", i,(float)count_error/(float)V);
+			dynamic_cast<GraphSSSP &>(graph).BellmanFord_Queue_reset();
 			//TODO chl
 		}
 
@@ -239,44 +205,45 @@ void HBFGraph::WorkEfficient()
 			  << "\t    maxFrontier: " << maxFrontier << std::endl
 			  << std::endl;
 }
-
-inline void HBFGraph::DynamicVirtualWarpForLast(const int F1Size, const int level)
-{
-	int size = numeric::log2(RESIDENT_THREADS / F1Size);
-	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
-		size = LOG2<MIN_VW>::value;
-	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
-		size = LOG2<MAX_VW>::value;
-
-#define funB(a) kernels::chl_kernel<(a), false>         \
-	<<<_Div(graph.V, (BLOCKDIM / (a)) * ITEM_PER_WARP), \
-	   BLOCKDIM,                                        \
-	   SMem_Per_Block<char, BLOCKDIM>::value>>>(devOutNodes, devOutEdges, devDistances, devF1, devF2, F1Size, level);
-
-	def_SWITCHB(size);
-#undef funB
 }
 
-inline void HBFGraph::DynamicVirtualWarp(const int F1Size, const int level)
-{
-	int size = numeric::log2(RESIDENT_THREADS / F1Size);
-	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
-		size = LOG2<MIN_VW>::value;
-	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
-		size = LOG2<MAX_VW>::value;
-//printf("VW_SIZE:%d\n", size);
+// inline void HBFGraph::DynamicVirtualWarpForLast(const int F1Size, const int level)
+// {
+// 	int size = numeric::log2(RESIDENT_THREADS / F1Size);
+// 	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
+// 		size = LOG2<MIN_VW>::value;
+// 	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
+// 		size = LOG2<MAX_VW>::value;
 
-/*//#define fun(a)	BF_Kernel1<(a), false>\
-    //                    <<<std::min(_DIV(graph.V, BLOCKDIM), 96), BLOCKDIM, SM_DYN>>>\
-    //					(devOutNode, devOutEdge, devDistance, devF1, devF2,  F1Size, level);*/
+// #define funB(a) kernels::chl_kernel<(a), false>         \
+// 	<<<_Div(graph.V, (BLOCKDIM / (a)) * ITEM_PER_WARP), \
+// 	   BLOCKDIM,                                        \
+// 	   SMem_Per_Block<char, BLOCKDIM>::value>>>(devOutNodes, devOutEdges, devDistances, devF1, devF2, F1Size, level);
 
-//TODO --chl
-#define fun(a) kernels::BF_Kernel1<(a), false>          \
-	<<<_Div(graph.V, (BLOCKDIM / (a)) * ITEM_PER_WARP), \
-	   BLOCKDIM,                                        \
-	   SMem_Per_Block<char, BLOCKDIM>::value>>>(devOutNodes, devOutEdges, devDistances, devF1, devF2, F1Size, level);
+// 	def_SWITCHB(size);
+// #undef funB
+// }
 
-	def_SWITCH(size);
+// inline void HBFGraph::DynamicVirtualWarp(const int F1Size, const int level)
+// {
+// 	int size = numeric::log2(RESIDENT_THREADS / F1Size);
+// 	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
+// 		size = LOG2<MIN_VW>::value;
+// 	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
+// 		size = LOG2<MAX_VW>::value;
+// //printf("VW_SIZE:%d\n", size);
 
-#undef fun
-}
+// /*//#define fun(a)	BF_Kernel1<(a), false>\
+//     //                    <<<std::min(_DIV(graph.V, BLOCKDIM), 96), BLOCKDIM, SM_DYN>>>\
+//     //					(devOutNode, devOutEdge, devDistances, devF1, devF2,  F1Size, level);*/
+
+// //TODO --chl
+// #define fun(a) kernels::BF_Kernel1<(a), false>          \
+// 	<<<_Div(graph.V, (BLOCKDIM / (a)) * ITEM_PER_WARP), \
+// 	   BLOCKDIM,                                        \
+// 	   SMem_Per_Block<char, BLOCKDIM>::value>>>(devOutNodes, devOutEdges, devDistances, devF1, devF2, F1Size, level);
+
+// 	def_SWITCH(size);
+
+// #undef fun
+//}
