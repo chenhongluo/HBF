@@ -91,16 +91,27 @@ void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 	int maxFrontier = std::numeric_limits<int>::min();
 	std::vector<int> host_frontiers;
 	int *Sources = new int[1];
-			if (CHECK_RESULT)
-		{
-			dynamic_cast<GraphSSSP &>(graph).BellmanFord_Queue_init();
-		}
+	if (CHECK_RESULT)
+	{
+		dynamic_cast<GraphSSSP &>(graph).BellmanFord_Queue_init();
+	}
+	int needCount =0;
 	for (int i = 0; i < N_OF_TESTS; i++)
 	{
-		timer_cuda::Timer<timer_cuda::DEVICE> TM_D;
-		Sources[0] = {N_OF_TESTS == 1 ? 0 : distribution(generator)};
+		// Sources[0] = {N_OF_TESTS == 1 ? 0 : distribution(generator)};
 		//Sources[0] = 160413;
-
+		Sources[0] = TEST_NODES[i];
+		// printfInt(gp.Orders[Sources[0]],"source_order");
+		// if(gp.Orders[TEST_NODES[i]]>10 || gp.Orders[TEST_NODES[i]]<5)
+		// {
+		// 	continue;
+		// }
+		// if(needCount >= 10)
+		// 	break;
+		// needCount++;
+		
+		
+		timer_cuda::Timer<timer_cuda::DEVICE> TM_D;
 		int edgeTraversed = graph.E;
 		// if (CHECK_TRAVERSED_EDGES)
 		// {
@@ -181,7 +192,7 @@ void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 				if(devDist[j] != Dist[j])
 				{
 					count_error++;	// exit(-1);
-					//printf("%d not equal,dev:%d,host:%d,cha:%d\n",j,devDist[j],Dist[j],devDist[j]-Dist[j]);
+					printf("%d not equal,dev:%d,host:%d,cha:%d\n",j,devDist[j],Dist[j],devDist[j]-Dist[j]);
 				}
 			}
 			printf("the %d test is %f", i,(float)count_error/(float)V);

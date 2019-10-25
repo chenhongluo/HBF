@@ -27,12 +27,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/dijkstra_shortest_paths.hpp>
-#include "XLib.hpp"
+#include <XLib.hpp>
 #include "Host/GraphSSSP.hpp"
 
 using namespace timer;
 
-void GraphSSSP::BoostDijkstra(const int source) {
+void GraphSSSP::BoostDijkstra(const int source,float &ttttt) {
 	using namespace boost;
 
 	typedef adjacency_list < listS, vecS, directedS, no_property, property<edge_weight_t, node_t> > graph_t;
@@ -58,8 +58,9 @@ void GraphSSSP::BoostDijkstra(const int source) {
 	dijkstra_shortest_paths(g, s,
             predecessor_map(boost::make_iterator_property_map(p.begin(), get(boost::vertex_index, g))).
             distance_map(boost::make_iterator_property_map(d.begin(), get(boost::vertex_index, g))));
-
-	TM.getTime("Boost Dijkstra");
+	TM.stop();
+	ttttt += TM.duration();
+	return;
 
     BellmanFord_Queue_init();
     BellmanFord_Queue(source);

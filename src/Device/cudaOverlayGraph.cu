@@ -124,11 +124,39 @@ namespace cuda_graph {
     {
         V=gp.Orders.size();
         printf("newSize:%d\n",gp.OutEdgesVec.size());
+#if LOGMARKS
+        LOGIN<<"Orders: ";
+        for(int i=0;i<gp.Orders.size();i++)
+        {
+            LOGIN<<gp.Orders[i]<<" ";
+        }
+        LOGIN<<std::endl;
+        LOGIN<<"Marks: ";
+        for(int i=0;i<gp.Marks.size();i++)
+        {
+            LOGIN<<gp.Marks[i]<<" ";
+        }
+        LOGIN<<std::endl;
+#endif
         upOrderTrans.resize(V);
         downOrderTrans.resize(V);
         upGraph.resize(V);
         downGraph.resize(V);
         GetBuckets(upStrategy,downStrategy);
+#if LOGFRONTIER
+        LOGIN<<"upGraphDegree: ";
+        for(int i=0;i<upGraph.OutNodesVec.size()-1;i++)
+        {
+            LOGIN<<upGraph.OutNodesVec[i+1]-upGraph.OutNodesVec[i]<<" ";
+        }
+        LOGIN<<std::endl;
+        LOGIN<<"downGraphDegree: ";
+        for(int i=0;i<downGraph.OutNodesVec.size()-1;i++)
+        {
+            LOGIN<<downGraph.OutNodesVec[i+1]-downGraph.OutNodesVec[i]<<" ";
+        }
+        LOGIN<<std::endl;
+#endif
     }
 
     void cudaGNRGraph::cudaMallocMem()
@@ -186,7 +214,7 @@ namespace cuda_graph {
     void cudaGNRGraph::cudaCopyMem()
     {
         cudaMemcpy(devUpOrderTrans, &upOrderTrans[0], V * sizeof (int), cudaMemcpyHostToDevice);
-        cudaMemcpy(devDownOrderTrans, &upOrderTrans[0], V * sizeof (int), cudaMemcpyHostToDevice);
+        cudaMemcpy(devDownOrderTrans, &downOrderTrans[0], V * sizeof (int), cudaMemcpyHostToDevice);
         __CUDA_ERROR("copy");
         cudaMemcpy(devUpOutNodes, &upGraph.OutNodesVec[0], (V+1) * sizeof (int), cudaMemcpyHostToDevice);
         cudaMemcpy(devDownOutNodes, &downGraph.OutNodesVec[0], (V+1) * sizeof (int), cudaMemcpyHostToDevice);

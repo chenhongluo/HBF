@@ -51,7 +51,7 @@ public:
     void BellmanFord_Frontier(const node_t source, std::vector<int>& Frontiers);
     void DijkstraSET(const node_t source);
 #if defined(BOOST_FOUND)
-    void BoostDijkstra(const node_t source);
+    void BoostDijkstra(const node_t source,float& ttttt);
     void BoostBellmanFord(const node_t source);
 #endif
 };

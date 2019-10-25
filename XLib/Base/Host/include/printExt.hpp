@@ -156,24 +156,24 @@ inline void printVector(vector<int3> &t,int n)
 
 
 
-inline void printStr(char* s)
+inline void printfStr(char* s)
 {
 	printf("%s\n",s);
 }
 
-inline void printInt(int n)
+inline void printfInt(int n,char* s)
 {
-	printf("%d\n",n);
+	printf("%s:%d\n",s,n);
 }
 
-inline void printInt2(int2 x)
+inline void printfInt2(int2 x,char* s)
 {
-	printf("%d,%d\n",x.x,x.y);
+	printf("%s:%d,%d\n",s,x.x,x.y);
 }
 
-inline void printInt3(int3 x)
+inline void printfInt3(int3 x,char* s)
 {
-	printf("%d,%d,%d\n",x.x,x.y,x.z);
+	printf("%s:%d,%d,%d\n",s,x.x,x.y,x.z);
 }
 
 #include "impl/printExt.i.hpp"

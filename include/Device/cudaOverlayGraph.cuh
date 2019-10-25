@@ -99,7 +99,7 @@ namespace cuda_graph {
 
         void printfBuckets()
         {
-            printStr("printfBuckets");
+            // printfStr("printfBuckets");
             // for(auto& x:cudaUpBuckets)
             // {
             //     x.printfBucket();

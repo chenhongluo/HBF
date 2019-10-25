@@ -87,7 +87,6 @@ namespace Kernels
         
     }
 
-    const float alpha = 0.3;
 
     __global__ void NodeMarksCompute(
         int* __restrict__ devCandidates,
@@ -109,7 +108,10 @@ namespace Kernels
             const float inDone = (float)cub::ThreadLoad<cub::LOAD_CS>(devInDones+index);
             const float outLoad = (float)cub::ThreadLoad<cub::LOAD_CS>(devOutLoads+index);
             const float outDone = (float)cub::ThreadLoad<cub::LOAD_CS>(devOutDones+index);
-            float mark = (inLoad*outLoad-inLoad-outLoad) * (1-alpha) + alpha*(outDone+inDone);
+            // float mark = (inLoad*outLoad-inLoad-outLoad) * (1-alpha) + alpha*(outDone+inDone);
+            float mark = (inLoad*outLoad ) * (1-alpha) + alpha*(outDone*inDone);
+            if(outLoad < 8)
+                mark = outLoad * belta + mark; 
             cub::ThreadStore<cub::STORE_CG>(devMarks+index,mark);
         }
         
@@ -204,25 +206,25 @@ namespace PreDeal
         }
     };
 
-    static void printfQueue(std::priority_queue<int2,vector<int2>,cmp> q)
-    {
-        printf("queue:\n");
-        while(!q.empty())
-        {
-            int2 t = q.top();
-            q.pop();
-            printInt2(t);
-        }
-    }
+    // static void printfQueue(std::priority_queue<int2,vector<int2>,cmp> q)
+    // {
+    //     printf("queue:\n");
+    //     while(!q.empty())
+    //     {
+    //         int2 t = q.top();
+    //         q.pop();
+    //         printInt2(t);
+    //     }
+    // }
 
-    static void printfMap(map<int,int> dis)
-    {
-        printf("Map:\n");
-        for(map<int,int>::iterator iter = dis.begin(); iter != dis.end(); iter++)
-        {
-            printf("%d,%d\n",iter->first,iter->second);
-        }
-    }
+    // static void printfMap(map<int,int> dis)
+    // {
+    //     printf("Map:\n");
+    //     for(map<int,int>::iterator iter = dis.begin(); iter != dis.end(); iter++)
+    //     {
+    //         printf("%d,%d\n",iter->first,iter->second);
+    //     }
+    // }
 
     void ShortCutCPU(vector<int> &ContractedNodes,vector<int> &Orders,vector<int3>& newEdges,vector<int>& OutNodes,vector<int2> &OutEdges,
     vector<int>& InNodes,vector<int2>& InEdges)
@@ -235,16 +237,12 @@ namespace PreDeal
             map<int,int> dis;
             dis.insert(map<int, int>::value_type(node,0));
             qp.push(make_int2(node,0));
-            // printfQueue(qp);
             while(!qp.empty())
             {
                 int2 nw = qp.top();
                 qp.pop();
-                // printfQueue(qp);
-                // printfMap(dis);
                 if(nw.y>(dis.find(nw.x))->second)
                 {
-                    //printf("continue\n");
                     continue;
                 }
                 for(int s=OutNodes[nw.x];s<OutNodes[nw.x+1];s++)
@@ -263,14 +261,9 @@ namespace PreDeal
                             dis.insert(map<int, int>::value_type(edge.x,nw.y+edge.y));
                             qp.push(make_int2(edge.x,nw.y+edge.y));
                         }
-                        // printfQueue(qp);
-                        // printfMap(dis);
                     }
                 }
             }
-            // printStr("newEdges");
-            // printVector(newEdges,newEdges.size());
-            // printInt(Orders[node]);
             for(map<int,int>::iterator iter = dis.begin(); iter != dis.end(); iter++)
             {
 
@@ -278,17 +271,11 @@ namespace PreDeal
                 for(int s=InNodes[node];s<InNodes[node+1];s++)
                 {
                     int2 inedge = InEdges[s];
-                    // printStr("inedge");
-                    // printInt2(inedge);
-                    // printInt(Orders[inedge.x]);
                     if(Orders[inedge.x]>myOrder)
                     {
                         for(int t=OutNodes[iter->first];t<OutNodes[iter->first+1];t++)
                         {
                             int2 outedge = OutEdges[t];
-                            // printStr("outedge");
-                            // printInt2(outedge);
-                            // printInt(Orders[outedge.x]);
                             if(Orders[outedge.x]>myOrder && inedge.x != outedge.x)
                             {
                                 newEdges.push_back(make_int3(inedge.x,outedge.x,inedge.y+iter->second+outedge.y));
@@ -297,8 +284,6 @@ namespace PreDeal
                     }
                 }
             }
-            // printStr("newEdges");
-            // printVector(newEdges,newEdges.size());
         }
     }
 
@@ -317,9 +302,7 @@ namespace Kernels
         VWInclusiveScanAdd<VW_SIZE,int>(tile,writeCount,sum);
         if(tile.thread_rank() == tile.size()-1 && sum !=0)
         {
-            //printf("fdsasbias:%d,%d\n",sum,bias,tile.thread_rank());
             bias = atomicAdd(pAllsize,sum);
-            //printf("dfsafdbias:%d,%d\n",sum,bias,tile.thread_rank());
         }
         bias = tile.shfl(bias,tile.size()-1);
         sum -= writeCount;

@@ -95,8 +95,8 @@ set(DEVICE_UTIL_SRC ${XLIB_DIR}/Base/Device/Util/src/cuda_util.cu
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
-#set(CUDA_NVCC_FLAGS "-std=c++11" "-Xcompiler=-O3" "-w")
-set(CUDA_NVCC_FLAGS "-std=c++11" "-ftz=true" "-Xcompiler" "-rdynamic" "-lineinfo" "-w")
+set(CUDA_NVCC_FLAGS "-std=c++11" "-Xcompiler=-O3" "-w")
+#set(CUDA_NVCC_FLAGS "-std=c++11" "-ftz=true" "-Xcompiler" "-rdynamic" "-lineinfo" "-w")
 
 set(SM "" CACHE STRING "number_of_SM")
 set(ARCH "" CACHE STRING "architectures")

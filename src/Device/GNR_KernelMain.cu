@@ -27,7 +27,7 @@ void PreDealGraph(GraphPreDeal& g)
         }
         cg.copyCandidate();
         cg.copyOrders();
-        printf("edgeDiffrence\n");
+        printfStr("edgeDiffrence");
         EdgeDifference<DEFAULT_VW> 
         <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value>>>
         (cg.devOutNodes,cg.devOutEdges,cg.devOrders,
@@ -41,7 +41,7 @@ void PreDealGraph(GraphPreDeal& g)
             cg.devCandidates,cg.devCandidateSize,
             cg.devInLoads,cg.devInDones);
         }
-        printf("NodeMarksCompute\n");
+        printfStr("NodeMarksCompute");
         NodeMarksCompute
         <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value >>>
         (cg.devCandidates,cg.devCandidateSize,
@@ -84,7 +84,7 @@ void PreDealGraph(GraphPreDeal& g)
         //     printf("%d\n",g.Orders[x]);
         // }
 
-        printf("ShortCut\n");
+        printfStr("ShortCut");
         g.AddEdges.clear();
         ShortCutCPU(g.ContractedNodes,g.Orders,g.AddEdges,g.OutNodesVec,g.OutEdgesVec,g.InNodesVec,g.InEdgesVec);
         // cg.copyTriEdges();
@@ -125,8 +125,8 @@ void PreDealGraph(GraphPreDeal& g)
         // cg.InitSize(cg.devNewEdgeSize);
         // cg.copyAddEdges();
         // printVector(g.AddEdges,g.AddEdges.size());
-        printf("CSRMerge\n");
-        printInt(g.AddEdges.size());                                                            
+        printfStr("CSRMerge");
+        printfInt(g.AddEdges.size(),"newSize");                                                            
         CSRMerge(g.AddEdges,g.OutNodesVec,g.OutEdgesVec,0);
         if(iSdirected == EdgeType::DIRECTED)
         {
@@ -141,8 +141,14 @@ void cudaGNRGraph::GNRSearchMain(int source)
     cudaClear();
     int i = cudaInit(source);
     __CUDA_ERROR("BellmanFord Kernel");
+
+#if LOGFRONTIER
+    LogPrintfStr("NEXT");
+#endif
+
     for (;i<cudaUpBuckets.size();i++)
     {
+        // printfInt(i,"bucketIndex");
         int* devF1 = cudaUpBuckets[i].devF;
         int* devF1Size = cudaUpBuckets[i].devFSize;
         int* devF2 = devFt;
@@ -152,7 +158,9 @@ void cudaGNRGraph::GNRSearchMain(int source)
         while(1)
         {
             // printStr("GNRSearchUp");
-            // devPrintfIntVec(devF1,devF1Size,"devF1");
+#if LOGFRONTIER
+            LogPrintfFrotier(devF1,devF1Size,"up_devF1");
+#endif
             GNRSearchUp<DEFAULT_VW> 
             <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value>>>
             (devUpOrderTrans,devDownOrderTrans,
@@ -176,20 +184,22 @@ void cudaGNRGraph::GNRSearchMain(int source)
         InitSize(devFtSize);
     }
     InitSize(devFtSize);
-    printfBuckets();
+    // printfBuckets();
     for (i=cudaDownBuckets.size()-1;i>=0;i--)
     {
-        //printInt(i);
+        //printInt(i);       
         int* devF1 = cudaDownBuckets[i].devF;
         int* devF1Size = cudaDownBuckets[i].devFSize;
         int* devF2 = devFt;
         int* devF2Size = devFtSize;
         int sublevel=1;
         int suplevel=i;
-        devPrintfIntVec(devF1,devF1Size,"devF1");
         while(1)
         {
-            printStr("GNRSearchDown");
+            //printStr("GNRSearchDown");
+#if LOGFRONTIER
+            LogPrintfFrotier(devF1,devF1Size,"down_devF1");
+#endif
             GNRSearchDown<DEFAULT_VW> 
             <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value>>>
             (devUpOrderTrans,devDownOrderTrans,
@@ -205,7 +215,7 @@ void cudaGNRGraph::GNRSearchMain(int source)
             std::swap<int*>(devF1,devF2);
             std::swap<int*>(devF1Size,devF2Size);
             InitSize(devF2Size);
-            printInt(test_size);
+            // printInt(test_size);
             if(test_size == 0)
             {
                 break;

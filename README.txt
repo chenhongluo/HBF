@@ -18,7 +18,7 @@ $ make -j
 example:
 $ cmake -DARCH=35 -DSM=12 ..
 $ cmake -DARCH=61 -DSM=9 -DCMAKE_BUILD_TYPE=Debug ..
-cmake -DARCH=70 -DSM=68 -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DARCH=70 -DSM=68 ..
 
 --------------------------------------------
 USAGE
@@ -39,7 +39,7 @@ see GraphFormat.txt for more information
 
 rm -r * 
 
-cmake -DARCH=35 -DSM=68 .. 
+cmake -DARCH=70 -DSM=68 .. 
 
 make -j
 

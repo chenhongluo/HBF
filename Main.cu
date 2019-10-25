@@ -31,6 +31,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <Host/GraphSSSP.hpp>
 #include <Device/cudaOverlayGraph.cuh>
 using namespace cuda_graph;
+using namespace timer;
+
+#if LOGFRONTIER|LOGMARKS
+	ofstream LOGIN(LOGNAME);
+#endif
 
 int main(int argc, char** argv) {
 	if (argc < 2)
@@ -49,7 +54,11 @@ int main(int argc, char** argv) {
     printf("init PreDeal\n");
     GraphPreDeal gp(gw);
     printf("start PreDeal\n");
+    Timer<HOST> TM;
+    TM.start();
     PreDealGraph(gp);
+    TM.stop();
+    printf("predeal time:%f",TM.duration());
     printf("end PreDeal\n");
     cudaGNRGraph gnr(gp,ALL_LEVELS,upSearchStrategy,downSearchStrategy);
     printf("\nmalloc devgraph");
@@ -63,7 +72,14 @@ int main(int argc, char** argv) {
    // graph.DijkstraSET(0);
 
 #if defined(BOOST_FOUND)
-    graph.BoostDijkstra(0);
-    graph.BoostBellmanFord(0);
+float time =0.0;
+    for (int i = 0; i < N_OF_TESTS; i++)
+	{
+		int k = TEST_NODES[i];
+        graph.BoostDijkstra(k,time);
+    }
+    printf("dijkstra:%f",time/N_OF_TESTS);
+    // graph.BoostDijkstra(0);
+    //graph.BoostBellmanFord(0);
 #endif
 }

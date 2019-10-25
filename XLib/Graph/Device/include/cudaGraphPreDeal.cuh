@@ -60,39 +60,6 @@ public:
     int* devNewEndEdgeSize;
 
 private:
-    // template<typename T>
-    // void copyVecTo(T* dest,vector<T>& source)
-    // {
-    //     cudaMemcpy(dest, 
-    //     &(source[0]), 
-    //     (source.size()) * sizeof(T),
-    //     cudaMemcpyHostToDevice);
-    // }
-
-    // template<typename T>
-    // void copyVecFrom(T* source,vector<T>& dest)
-    // {
-    //     cudaMemcpy(&(dest[0]), 
-    //     source, 
-    //     (dest.size()) * sizeof(T),
-    //     cudaMemcpyDeviceToHost);
-    // }
-
-    // void copyIntTo(int *dest,int source)
-    // {
-    //     cudaMemcpy(dest, 
-    //     &source, 
-    //     1 * sizeof(int),
-    //     cudaMemcpyHostToDevice);
-    // }
-
-    // void copyIntFrom(int* source,int* dest)
-    // {
-    //     cudaMemcpy(dest, 
-    //     source, 
-    //     1 * sizeof(int),
-    //     cudaMemcpyDeviceToHost);
-    // }
 
     void copyNE(int* devNodes,int2* devEdges,
     vector<int>Nodes,vector<int2>Edges)
