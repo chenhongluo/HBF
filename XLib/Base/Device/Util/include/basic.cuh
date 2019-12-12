@@ -26,7 +26,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * federico.busato@univr.it
  */
 #pragma once
-
+#include <cooperative_groups.h>
+using namespace cooperative_groups;
 /** @namespace basic
  *  provide basic cuda functions
  */
@@ -70,5 +71,20 @@ __device__ __forceinline__ void swap(T& A, T& B);
 __device__ __forceinline__  int log2(const int value);
 
 } //@basic
+
+template<int VW_SIZE,typename T>
+__device__ __forceinline__
+void VWInclusiveScanAdd(thread_block_tile<VW_SIZE>& tile,const T& value,T& sum)
+{
+    sum = value;
+    for(int i=1;i<=tile.size()/2;i*=2)
+    {
+        T n = tile.shfl_up(sum, i);
+        if (tile.thread_rank() >= i)
+        {
+            sum += n;
+        }
+    }
+}
 
 #include "impl/basic.i.cuh"

@@ -9,11 +9,11 @@ using std::vector;
 namespace graph {
     class OverlayGraph{
 	public:
-    	vector<int> OutNodesVec;
+    	vector<int4> OutNodesVec;
         vector<int2> OutEdgesVec;
         void resize(int V)
         {
-            OutNodesVec.resize(V+1);
+            OutNodesVec.resize(V);
         }
     };
 }

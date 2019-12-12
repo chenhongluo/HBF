@@ -1,10 +1,11 @@
-#include <Device/PreDeal_KernelFun.cuh>
-#include <Device/GNR_KernelFun.cuh>
+#include <Device/PreDeal_KernelFunc.cuh>
+#include <Device/GNR_KernelFunc.cuh>
 #include <Device/cudaOverlayGraph.cuh>
 
 #include <../config.cuh>
 #include <vector>
 #include <XLib.hpp>
+#include<ctime>
 
 using std::vector;
 
@@ -27,7 +28,7 @@ void PreDealGraph(GraphPreDeal& g)
         }
         cg.copyCandidate();
         cg.copyOrders();
-        printfStr("edgeDiffrence");
+        hostPrintfSmall("edgeDiffrence");
         EdgeDifference<DEFAULT_VW> 
         <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value>>>
         (cg.devOutNodes,cg.devOutEdges,cg.devOrders,
@@ -41,7 +42,7 @@ void PreDealGraph(GraphPreDeal& g)
             cg.devCandidates,cg.devCandidateSize,
             cg.devInLoads,cg.devInDones);
         }
-        printfStr("NodeMarksCompute");
+        hostPrintfSmall("NodeMarksCompute");
         NodeMarksCompute
         <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value >>>
         (cg.devCandidates,cg.devCandidateSize,
@@ -52,81 +53,15 @@ void PreDealGraph(GraphPreDeal& g)
 
         cg.copyMarks();
         //printVector(g.Marks,20);
-        printf("SelectNodesThresholdOrTOP\n");
+        hostPrintfSmall("SelectNodesThresholdOrTOP");
         SelectNodesThresholdOrTOP(g.Candidates,g.Marks,
         g.Orders,g.ContractedNodes,supLevel,selectNodesNum[supLevel],selectNodesStrategy);
-        // __CUDA_ERROR("SelectNodesThresholdOrTOP Kernel");
-        // g.Candidates.remove(29);
-        // g.Candidates.remove(1048599);
-        // g.Orders[29] = 0;
-        // g.Orders[1048599] = 0;
-        // g.ContractedNodes.push_back(29);
-        // g.ContractedNodes.push_back(1048599);
 
-        // printf("ContractedNodes:/n");
-        // printVector(g.ContractedNodes,g.ContractedNodes.size());
-
-        // printf("g.Orders:/n");
-        // printVector<int>(g.Orders,g.Orders.size());
-
-
-        // printf("GetTriEdges\n");
-        // GetTriEdges(g.ContractedNodes,g.Orders,supLevel,g.InNodesVec,g.InEdgesVec,
-        // g.ContractedEdges);
-        // for(int i=0;i<g.ContractedEdges.size();i++)
-        // {
-        //     printf("x:%d,y:%d,z:%d\n",g.ContractedEdges[i].x,
-        //     g.ContractedEdges[i].y,g.ContractedEdges[i].z);
-        // }
-
-        // for(int x:g.ContractedNodes)
-        // {
-        //     printf("%d\n",g.Orders[x]);
-        // }
-
-        printfStr("ShortCut");
+        hostPrintfSmall("ShortCut");
         g.AddEdges.clear();
         ShortCutCPU(g.ContractedNodes,g.Orders,g.AddEdges,g.OutNodesVec,g.OutEdgesVec,g.InNodesVec,g.InEdgesVec);
-        // cg.copyTriEdges();
-        // cg.copyOrders();
-        // int3* devF1 = cg.devTriEdges;
-        // int* devF1Size = cg.devTriEdgeSize;
-        // int3* devF2 = cg.devNewEdges;
-        // int* devF2Size = cg.devNewEdgeSize;
-        // cg.InitSize(cg.devNewEdgeSize);
-        // cg.InitSize(cg.devNewEndEdgeSize);
-        // while(1)
-        // {
-        //     int size,newSize;
-        //     cg.printfEdges(devF2,devF2Size);
-        //     ShortCut<DEFAULT_VW> 
-        //     <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value>>>
-        //     (devF1,devF1Size,
-        //     cg.devOutNodes,cg.devOutEdges,cg.devOrders,
-        //     devF2,devF2Size,
-        //     cg.devNewEndEdges,cg.devNewEndEdgeSize);
-        //     cg.printfEdges(devF1,devF1Size);
-            // cg.printfEdges(devF2,devF2Size);
-
-        //     //cg.copyAddEdges();
-        //     cg.copyLeftEdgesSize(devF2Size,size);
-        //     cg.copyLeftEdgesSize(cg.devNewEndEdgeSize,newSize);
-        //     //TODO CPU?? chl
-        //     printf("%d,%d\n",size,newSize);
-        //     if(size == 0)
-        //     {
-        //         break;
-        //     }
-
-        //     std::swap<int3*>(devF1,devF2);
-        //     std::swap<int*>(devF1Size,devF2Size);
-        //     cg.InitSize(devF2Size);
-        // }
-        // cg.InitSize(cg.devNewEdgeSize);
-        // cg.copyAddEdges();
-        // printVector(g.AddEdges,g.AddEdges.size());
-        printfStr("CSRMerge");
-        printfInt(g.AddEdges.size(),"newSize");                                                            
+        hostPrintfSmall("CSRMerge");
+        hostPrintfSmall(g.AddEdges.size(),"newSize: ");                                                            
         CSRMerge(g.AddEdges,g.OutNodesVec,g.OutEdgesVec,0);
         if(iSdirected == EdgeType::DIRECTED)
         {
@@ -139,90 +74,98 @@ namespace cuda_graph {
 void cudaGNRGraph::GNRSearchMain(int source)
 {
     cudaClear();
-    int i = cudaInit(source);
-    __CUDA_ERROR("BellmanFord Kernel");
+    int f1Size = cudaInit(source),f2Size,f3Size = 1,f4Size;
+    __CUDA_ERROR("GNRSearchMain Kernel");
 
 #if LOGFRONTIER
-    LogPrintfStr("NEXT");
+    //LogHostPrintSmall("NEXT");
 #endif
-
-    for (;i<cudaUpBuckets.size();i++)
+    // printfInt(i,"bucketIndex");
+    int* devF1 = upF1;
+    int* devF1Size = upF1Size;
+    int* devF2 = upF2;
+    int* devF2Size = upF2Size;
+    int* devF3 = downF1;
+    int* devF3Size = downF1Size;
+    int* devF4 = downF2;
+    int* devF4Size = downF2Size;
+    int level = 1;
+    int validLevel = 1;
+    int upFlag = 0,downFlag = 0,zero = 0;
+    int* times;
+    cudaMallocManaged(&times, GRIDDIM*BLOCKDIM/32);
+    while(1)
     {
-        // printfInt(i,"bucketIndex");
-        int* devF1 = cudaUpBuckets[i].devF;
-        int* devF1Size = cudaUpBuckets[i].devFSize;
-        int* devF2 = devFt;
-        int* devF2Size = devFtSize;
-        int sublevel=1;
-        int suplevel=i;
-        while(1)
-        {
-            // printStr("GNRSearchUp");
+        clock_t time1 = clock();
+        for(int i=0;i<GRIDDIM*BLOCKDIM/32;i++)
+            times[i]=0;
+        // printStr("GNRSearchUp");
 #if LOGFRONTIER
-            LogPrintfFrotier(devF1,devF1Size,"up_devF1");
+    if(level<0){
+        LogPrintfFrotier(devF1,devF1Size,"up_devF1");
+        LogPrintfFrotier(devF3,devF3Size,"up_devF3");
+    }
 #endif
-            GNRSearchUp<DEFAULT_VW> 
-            <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value>>>
-            (devUpOrderTrans,devDownOrderTrans,
-            devUpOutNodes,devUpOutEdges,
-            devDistances,
-            devF1,devF2,devF1Size,devF2Size,
-            devUpBuckets,devUpBucketSize,
-            devDownBuckets,devDownBucketSize,
-            suplevel,sublevel);
-            __CUDA_ERROR("BellmanFord Kernel");
-            sublevel++;
-            int test_size = GetSize(devF2Size);
+        // hostPrintfSmall(f1Size,"f1Size: ");
+        // hostPrintfSmall(f3Size,"f3Size: ");
+        if(f1Size<50000&&f3Size==0){
+        //if(f1Size==0){
+            break;
+        }
+        upFlag = downFlag = 0;
+        if(f1Size<KERNELNODES && f3Size > 0)
+            downFlag = 1;
+        else
+            downFlag = 0;
+        if(f1Size>0){
+            int gridDim1 = (f1Size / 4+1)<GRIDDIM?(f1Size /4+1):GRIDDIM;
+            if(downFlag)
+                GNRSearchUp<DEFAULT_VW><<<gridDim1,BLOCKDIM,0,upStream>>>
+                (devUpOutNodes,devUpOutEdges,devDistances,
+                devF1,devF2,devF4,f1Size,devF2Size,devF4Size,
+                level,validLevel,0,times);
+            else
+                GNRSearchUp<DEFAULT_VW><<<GRIDDIM,BLOCKDIM,0,upStream>>>
+                (devUpOutNodes,devUpOutEdges,devDistances,
+                devF1,devF2,devF3,f1Size,devF2Size,devF3Size,
+                level,validLevel,0,times);
             std::swap<int*>(devF1,devF2);
             std::swap<int*>(devF1Size,devF2Size);
-            InitSize(devF2Size);
-            if(test_size == 0)
-            {
-                break;
-            }
+            // copyIntFromAsync(f1Size,devF2Size,upStream);
+            upFlag = 1;
         }
-        InitSize(devFtSize);
-    }
-    InitSize(devFtSize);
-    // printfBuckets();
-    for (i=cudaDownBuckets.size()-1;i>=0;i--)
-    {
-        //printInt(i);       
-        int* devF1 = cudaDownBuckets[i].devF;
-        int* devF1Size = cudaDownBuckets[i].devFSize;
-        int* devF2 = devFt;
-        int* devF2Size = devFtSize;
-        int sublevel=1;
-        int suplevel=i;
-        while(1)
+        if(downFlag == 1)
         {
-            //printStr("GNRSearchDown");
-#if LOGFRONTIER
-            LogPrintfFrotier(devF1,devF1Size,"down_devF1");
-#endif
-            GNRSearchDown<DEFAULT_VW> 
-            <<< GRIDDIM,BLOCKDIM,SMem_Per_Block<char, BLOCKDIM>::value>>>
-            (devUpOrderTrans,devDownOrderTrans,
-            devDownOutNodes,devDownOutEdges,
-            devDistances,
-            devF1,devF2,devF1Size,devF2Size,
-            devUpBuckets,devUpBucketSize,
-            devDownBuckets,devDownBucketSize,
-            suplevel,sublevel);
-            __CUDA_ERROR("BellmanFord Kernel");
-            sublevel++;
-            int test_size = GetSize(devF2Size);
-            std::swap<int*>(devF1,devF2);
-            std::swap<int*>(devF1Size,devF2Size);
-            InitSize(devF2Size);
-            // printInt(test_size);
-            if(test_size == 0)
-            {
-                break;
-            }
+            GNRSearchDown<DEFAULT_VW><<<GRIDDIM,BLOCKDIM,0,downStream>>>
+            (devDownOutNodes,devDownOutEdges,devDistances,
+            devF3,devF4,f3Size,devF4Size,
+            level);
+            validLevel = level;
+            std::swap<int*>(devF3,devF4);
+            std::swap<int*>(devF3Size,devF4Size);
         }
-        InitSize(devFtSize);
+        if(upFlag == 1)
+            cudaStreamSynchronize(upStream);
+        if(downFlag == 1)
+            cudaStreamSynchronize(downStream);
+        if(upFlag == 1){
+            clock_t time2 = clock();
+            copyIntFrom(f1Size,devF1Size);
+            copyIntTo(zero,devF2Size);
+            if(!downFlag)
+                copyIntFrom(f3Size,devF3Size);
+            cout<<f1Size<<" "<<time2-time1<<endl;
+            for(int i=0;i<GRIDDIM*BLOCKDIM/32;i++)
+                cout<<times[i]<<" ";
+            cout<<endl;
+        }
+        if(downFlag == 1)
+        {
+            copyIntFrom(f3Size,devF3Size);
+            copyIntTo(zero,devF4Size);
+        }
+        __CUDA_ERROR("GNRSearchMain Kernel");
+        level++;
     }
-    InitSize(devFtSize);
 }
 }

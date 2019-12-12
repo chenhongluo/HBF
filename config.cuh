@@ -32,11 +32,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using std::vector;
 using std::ofstream;
 
-const unsigned			GRIDDIM = 128; 
+const unsigned			GRIDDIM = 68*4; 
 const unsigned      	BLOCKDIM = 256;
-const int             N_OF_TESTS = 200;
+const int             N_OF_TESTS = 1;
 const bool CHECK_TRAVERSED_EDGES = false;
-// const bool          CHECK_RESULT = true;
 const bool          CHECK_RESULT = false;
 const int            CUDA_DEBUG = 0;
 const int			 DEBUG_LEVEL = 3;
@@ -56,20 +55,53 @@ const vector<int> TEST_NODES =
 #if LOGFRONTIER|LOGMARKS
 	extern ofstream LOGIN;
 #endif
+#define SHAREDLIMIT 4
+#define SHAREDLIMIT2 6
+
+#define REGLIMIT 32
 
 #define MAXSUPLEVEL 100
 const float alpha = 0.3;
 const float belta = 1.0;
 
-const int ALL_LEVELS = 16;
+const int ALL_LEVELS = 0;
 // const int selectNodesStrategy = 1;
 const int selectNodesStrategy = 0;
 const vector<int> selectNodesNum = {
 	2,  4,  6,  8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30
 };
-// 	100000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000
+
+#define NODESPLIT false
+const int EdgesOneSplit = 4096;
+#define SPLITBITS 2
+
+//kernel para
+const int KERNELNODES = 68*64;
+
+#define DELTASTEPPING true
+const int MAXNODESALLOW = 68*128;
+
+//not to be modified
+const int ThreadsOneSplit = 32; // for display
+const int MAXSplits = 1 << SPLITBITS;
+const int SplitBits = 32 - SPLITBITS;
+#if SPLITBITS
+const unsigned SplitMask = ((1 << SplitBits) - 1);
+#else
+const unsigned SplitMask = 0xFFFFFFFF;
+#endif
+//------------------------------------------------------
+
+#define UPDOWNREM true
+
+#define EDGEALIGN false //TODO
+const int AlignSize = 128; // TODO
+
+#define EDGECOMPRESS false//TODO
+const int COMPRESSSIZE = 128;//TODO
+// 	1000000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000,20000
 // };
-// 300000,30000,30000,20000,20000,
+// 500000,30000,30000,20000,20000,
 // 20000,20000,20000,20000,20000,
 // 20000,20000,20000,20000,20000,
 // 10000,10000,10000,10000,10000,
@@ -77,8 +109,8 @@ const vector<int> selectNodesNum = {
 // const int ALL_LEVELS = 1;
 // const vector<int> selectNodesNum = {0,200000,10000,10000,10000,10000,10000,10000,10000,10000};
 
-const vector<int> upSearchStrategy = {25};
-const vector<int> downSearchStrategy = {25}; 
+// const vector<int> upSearchStrategy = {25};
+// const vector<int> downSearchStrategy = {25}; 
 
 // -----------------------------------------------------------------------------
 
@@ -91,11 +123,9 @@ const int   ITEM_PER_WARP = 1;      // gridDim = RESIDENT_THREADS * ITEM_PER_WAR
 
 //------------------------------------------------------------------------------
 
-const int REG_LIMIT = 32;            // register size
-
 #if ATOMIC64
 	#define        hdist_t  int2
-	#define            INF  (make_int2(INT_MAX, INT_MAX))
+	#define            INF  (make_int2(0, INT_MAX))
 	#define           ZERO	(make_int2(0, 0))
 	#define MAKE_DIST(a,b)	( make_int2((a), (b)) )
 #else

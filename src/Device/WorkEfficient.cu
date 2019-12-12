@@ -1,56 +1,11 @@
-/*------------------------------------------------------------------------------
-Copyright © 2015 by Nicola Bombieri
-
-H-BF is provided under the terms of The MIT License (MIT):
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-------------------------------------------------------------------------------*/
-/**
- * @author Federico Busato
- * Univerity of Verona, Dept. of Computer Science
- * federico.busato@univr.it
- */
 #include <Device/cudaOverlayGraph.cuh>
 #include <../config.cuh>
 //#include "Kernels/WorkEfficient_KernelDispath.cu"
 
 #include <vector>
+#include<random>
 
 using std::vector;
-
-namespace
-{
-template <typename T>
-inline bool distanceCompare(dist_t A, T B);
-
-template <>
-inline bool distanceCompare<dist_t>(dist_t A, dist_t B)
-{
-	return A == B;
-}
-
-template <>
-inline bool distanceCompare<int2>(dist_t A, int2 B)
-{
-	return A == B.y;
-}
-} // namespace
-
 // void cudaGNRGraph::FrontierDebug(const int FSize, const int level)
 // {
 // 	if (FSize > max_frontier_size)
@@ -192,7 +147,7 @@ void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 				if(devDist[j] != Dist[j])
 				{
 					count_error++;	// exit(-1);
-					printf("%d not equal,dev:%d,host:%d,cha:%d\n",j,devDist[j],Dist[j],devDist[j]-Dist[j]);
+					// printf("%d not equal,dev:%d,host:%d,cha:%d\n",j,devDist[j],Dist[j],devDist[j]-Dist[j]);
 				}
 			}
 			printf("the %d test is %f", i,(float)count_error/(float)V);
@@ -217,44 +172,3 @@ void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 			  << std::endl;
 }
 }
-
-// inline void HBFGraph::DynamicVirtualWarpForLast(const int F1Size, const int level)
-// {
-// 	int size = numeric::log2(RESIDENT_THREADS / F1Size);
-// 	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
-// 		size = LOG2<MIN_VW>::value;
-// 	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
-// 		size = LOG2<MAX_VW>::value;
-
-// #define funB(a) kernels::chl_kernel<(a), false>         \
-// 	<<<_Div(graph.V, (BLOCKDIM / (a)) * ITEM_PER_WARP), \
-// 	   BLOCKDIM,                                        \
-// 	   SMem_Per_Block<char, BLOCKDIM>::value>>>(devOutNodes, devOutEdges, devDistances, devF1, devF2, F1Size, level);
-
-// 	def_SWITCHB(size);
-// #undef funB
-// }
-
-// inline void HBFGraph::DynamicVirtualWarp(const int F1Size, const int level)
-// {
-// 	int size = numeric::log2(RESIDENT_THREADS / F1Size);
-// 	if (MIN_VW >= 1 && size < LOG2<MIN_VW>::value)
-// 		size = LOG2<MIN_VW>::value;
-// 	if (MAX_VW >= 1 && size > LOG2<MAX_VW>::value)
-// 		size = LOG2<MAX_VW>::value;
-// //printf("VW_SIZE:%d\n", size);
-
-// /*//#define fun(a)	BF_Kernel1<(a), false>\
-//     //                    <<<std::min(_DIV(graph.V, BLOCKDIM), 96), BLOCKDIM, SM_DYN>>>\
-//     //					(devOutNode, devOutEdge, devDistances, devF1, devF2,  F1Size, level);*/
-
-// //TODO --chl
-// #define fun(a) kernels::BF_Kernel1<(a), false>          \
-// 	<<<_Div(graph.V, (BLOCKDIM / (a)) * ITEM_PER_WARP), \
-// 	   BLOCKDIM,                                        \
-// 	   SMem_Per_Block<char, BLOCKDIM>::value>>>(devOutNodes, devOutEdges, devDistances, devF1, devF2, F1Size, level);
-
-// 	def_SWITCH(size);
-
-// #undef fun
-//}

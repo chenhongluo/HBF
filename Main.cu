@@ -40,7 +40,7 @@ using namespace timer;
 int main(int argc, char** argv) {
 	if (argc < 2)
 		__ERROR("No Input File");
-
+    cudaSetDevice(2);
 	cuda_util::cudaStatics();
 
     node_t V; edge_t E; int nof_lines;
@@ -60,12 +60,13 @@ int main(int argc, char** argv) {
     TM.stop();
     printf("predeal time:%f",TM.duration());
     printf("end PreDeal\n");
-    cudaGNRGraph gnr(gp,ALL_LEVELS,upSearchStrategy,downSearchStrategy);
+    cudaGNRGraph gnr(gp);
     printf("\nmalloc devgraph");
     gnr.cudaMallocMem();
     __CUDA_ERROR("malloc");
-    printf("\ncopy to device");
+    printf("\ncopy to device\n");
     gnr.cudaCopyMem();
+    printf("\ncopy ok\n");
     __CUDA_ERROR("copy");
     gnr.WorkEfficient(gw);
 

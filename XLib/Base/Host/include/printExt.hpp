@@ -33,44 +33,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <vector_types.h>
 #include <vector_functions.hpp>
 #include <vector>
-using std::vector;
+using namespace std;
 #if __NVCC__
     #include <cuda_runtime.h>
     #include "../../Device/BaseDevice.cuh"
-
-	template<typename T>
-inline void copyVecTo(T* dest,vector<T>& source)
-{
-    cudaMemcpy(dest, 
-    &(source[0]), 
-    (source.size()) * sizeof(T),
-    cudaMemcpyHostToDevice);
-}
-
-template<typename T>
-inline void copyVecFrom(T* source,vector<T>& dest)
-{
-    cudaMemcpy(&(dest[0]), 
-    source, 
-    (dest.size()) * sizeof(T),
-    cudaMemcpyDeviceToHost);
-}
-
-inline void copyIntTo(int *dest,int source)
-{
-    cudaMemcpy(dest, 
-    &source, 
-    1 * sizeof(int),
-    cudaMemcpyHostToDevice);
-}
-
-inline void copyIntFrom(int* source,int* dest)
-{
-    cudaMemcpy(dest, 
-    source, 
-    1 * sizeof(int),
-    cudaMemcpyDeviceToHost);
-}
 #endif
 
 namespace std {
@@ -125,55 +91,47 @@ void printArray<int3>(int3 Array[], const int size, std::string text, const char
 #endif
 } //@printExt
 
-inline void printVector(vector<int> &t,int n)
+inline void hostPrintfSmall(string s,bool flag=true)
+{
+	cout<<s;
+    if(flag)
+        cout<<endl;
+}
+inline void hostPrintfSmall(int x,string s="",bool flag=true)
+{
+	cout<<s<<x;
+    if(flag)
+        cout<<endl;
+}
+inline void hostPrintfSmall(int2 x,string s="",bool flag=true)
+{
+	cout<<s<<x.x<<" "<<x.y;
+    if(flag)
+        cout<<endl;
+}
+inline void hostPrintfSmall(int3 x,string s="",bool flag=true)
+{
+	cout<<s<<x.x<<" "<<x.y<<" "<<x.z;
+    if(flag)
+        cout<<endl;
+}
+inline void hostPrintfSmall(int4 x,string s="",bool flag=true)
+{
+	cout<<s<<x.x<<" "<<x.y<<" "<<x.z<<" "<<x.w;
+    if(flag)
+        cout<<endl;
+}
+
+template<typename T>
+inline void printVector(vector<T> &t,int n)
 {
 	int k = n<t.size()?n:t.size();
 	for(int i=0;i<k;i++)
 	{
-		std::cout<<t[i]<<"\n";
+		hostPrintfSmall(t[i],"");
+        cout<<" ";
 	}
-	printf("\n");
-}
-
-inline void printVector(vector<int2> &t,int n)
-{
-	int k = n<t.size()?n:t.size();
-	for(int i=0;i<k;i++)
-	{
-		std::cout<<t[i].x<<" "<<t[i].y<<"\n";
-	}
-	printf("\n");
-}
-inline void printVector(vector<int3> &t,int n)
-{
-	int k = n<t.size()?n:t.size();
-	for(int i=0;i<k;i++)
-	{
-		std::cout<<t[i].x<<" "<<t[i].y<<" "<<t[i].z<<"\n";
-	}
-	printf("\n");
-}
-
-
-
-inline void printfStr(char* s)
-{
-	printf("%s\n",s);
-}
-
-inline void printfInt(int n,char* s)
-{
-	printf("%s:%d\n",s,n);
-}
-
-inline void printfInt2(int2 x,char* s)
-{
-	printf("%s:%d,%d\n",s,x.x,x.y);
-}
-
-inline void printfInt3(int3 x,char* s)
-{
-	printf("%s:%d,%d,%d\n",s,x.x,x.y,x.z);
+	cout<<endl;
 }
 
 #include "impl/printExt.i.hpp"

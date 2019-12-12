@@ -27,7 +27,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 #include "include/cuda_util.cuh"
 #include "include/definition.cuh"
-#include "include/global_sync.cuh"
 #include "include/basic.cuh"
 #include "include/PTX.cuh"
 #include "include/Timer.cuh"
+#include "include/copy2print.cuh"

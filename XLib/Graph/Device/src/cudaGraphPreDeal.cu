@@ -44,12 +44,12 @@ cudaGraphPreDeal::cudaGraphPreDeal(GraphPreDeal& _graph) :
 	cudaMalloc(&devCandidates, graph.V * sizeof(int));
 	cudaMalloc(&devCandidateSize, 1 * sizeof(int));
 
-	cudaMalloc(&devTriEdges, graph.E * sizeof(int3) * 5);
-	cudaMalloc(&devTriEdgeSize, 1 * sizeof(int));
-	cudaMalloc(&devNewEdges, graph.E * sizeof(int3) * 5);
-	cudaMalloc(&devNewEdgeSize, 1 * sizeof(int));
-	cudaMalloc(&devNewEndEdges, graph.E * sizeof(int3) * 5);
-	cudaMalloc(&devNewEndEdgeSize, 1 * sizeof(int));
+	// cudaMalloc(&devTriEdges, graph.E * sizeof(int3) * 5);
+	// cudaMalloc(&devTriEdgeSize, 1 * sizeof(int));
+	// cudaMalloc(&devNewEdges, graph.E * sizeof(int3) * 5);
+	// cudaMalloc(&devNewEdgeSize, 1 * sizeof(int));
+	// cudaMalloc(&devNewEndEdges, graph.E * sizeof(int3) * 5);
+	// cudaMalloc(&devNewEndEdgeSize, 1 * sizeof(int));
 
 
     if (graph.gw.Direction == EdgeType::DIRECTED) {
@@ -83,12 +83,12 @@ cudaGraphPreDeal::~cudaGraphPreDeal() {
 	cudaFree(devCandidates);
 	cudaFree(devCandidateSize);
 
-	cudaFree(devTriEdges);
-	cudaFree(devTriEdgeSize);
-	cudaFree(devNewEdges);
-	cudaFree(devNewEdgeSize);
-	cudaFree(devNewEndEdges);
-	cudaFree(devNewEndEdgeSize);
+	// cudaFree(devTriEdges);
+	// cudaFree(devTriEdgeSize);
+	// cudaFree(devNewEdges);
+	// cudaFree(devNewEdgeSize);
+	// cudaFree(devNewEndEdges);
+	// cudaFree(devNewEndEdgeSize);
 
     if (graph.gw.Direction == EdgeType::DIRECTED) {
         cudaFree(devInNodes);

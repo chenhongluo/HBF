@@ -71,7 +71,6 @@ set(HOST_UTIL_SRC 	${XLIB_DIR}/Base/Host/src/fUtil.cpp
 )
 
 set(DEVICE_UTIL_SRC ${XLIB_DIR}/Base/Device/Util/src/cuda_util.cu
-                    ${XLIB_DIR}/Base/Device/Util/src/global_sync.cu
                     ${XLIB_DIR}/Base/Device/Util/src/Timer.cu
                     ${XLIB_DIR}/Graph/Device/src/cudaGraphPreDeal.cu
 )
@@ -95,7 +94,7 @@ set(DEVICE_UTIL_SRC ${XLIB_DIR}/Base/Device/Util/src/cuda_util.cu
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 
-set(CUDA_NVCC_FLAGS "-std=c++11" "-Xcompiler=-O3" "-w")
+set(CUDA_NVCC_FLAGS "-std=c++11" "-Xcompiler=-O3" "-w" "--ptxas-options=-v")
 #set(CUDA_NVCC_FLAGS "-std=c++11" "-ftz=true" "-Xcompiler" "-rdynamic" "-lineinfo" "-w")
 
 set(SM "" CACHE STRING "number_of_SM")

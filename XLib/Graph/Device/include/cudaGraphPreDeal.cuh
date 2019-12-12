@@ -51,21 +51,20 @@ public:
 
     int* devOrders;
 
-    int3* devTriEdges;
-    int* devTriEdgeSize;
+    // int3* devTriEdges;
+    // int* devTriEdgeSize;
 
-    int3* devNewEdges;
-    int* devNewEdgeSize;
-    int3* devNewEndEdges;
-    int* devNewEndEdgeSize;
+    // int3* devNewEdges;
+    // int* devNewEdgeSize;
+    // int3* devNewEndEdges;
+    // int* devNewEndEdgeSize;
 
 private:
 
-    void copyNE(int* devNodes,int2* devEdges,
-    vector<int>Nodes,vector<int2>Edges)
+    void copyNE(int* devNodes,int2* devEdges,vector<int>& Nodes,vector<int2>& Edges)
     {
-        copyVecTo<int>(devNodes,Nodes);
-        copyVecTo<int2>(devEdges,Edges);
+        copyVecTo<int>(Nodes,devNodes);
+        copyVecTo<int2>(Edges,devEdges);
     }
 
 public:
@@ -82,56 +81,17 @@ public:
     }
     void copyCandidate()
     {
-        copyVecTo<int>(devCandidates,graph.Candidates);
-        copyIntTo(devCandidateSize,graph.Candidates.size());
+        copyVecTo<int>(graph.Candidates,devCandidates);
+        int temp = graph.Candidates.size();
+        copyIntTo(temp,devCandidateSize);
     }
     void copyOrders()
     {
-        copyVecTo<int>(devOrders,graph.Orders);
+        copyVecTo<int>(graph.Orders,devOrders);
     }
     void copyMarks()
     {
-        copyVecFrom<float>(devMarks,graph.Marks);
-    }
-    void copyTriEdges()
-    {
-        copyVecTo<int3>(devTriEdges,graph.ContractedEdges);
-        copyIntTo(devTriEdgeSize,graph.ContractedEdges.size());
-    }
-    void copyAddEdges()
-    {
-        int temp;
-        copyIntFrom(devNewEndEdgeSize,&temp);
-        graph.AddEdges.resize(temp);
-        copyVecFrom<int3>(devNewEndEdges,graph.AddEdges);
-    }
-    void printfEdges(int3 *devEdges,int* len)
-    {
-        printf("print edges:\n");
-        int temp;
-        copyIntFrom(len,&temp);
-        vector<int3> vt(temp);
-        copyVecFrom<int3>(devEdges,vt);
-        for(int i=0;i<vt.size();i++)
-        {
-            printf("x:%d,y:%d,z:%d\n",vt[i].x,vt[i].y,vt[i].z);
-        }
-    }
-
-    void InitSize(int*psize)
-    {
-        int temp=0;
-        copyIntTo(psize,temp);
-    }
-
-    void InitSize(int*psize,int &size)
-    {
-        copyIntTo(psize,size);
-    }
-
-    void copyLeftEdgesSize(int* psize,int &size)
-    {
-        copyIntFrom(psize,&size);
+        copyVecFrom<float>(graph.Marks,devMarks);
     }
 };
 
