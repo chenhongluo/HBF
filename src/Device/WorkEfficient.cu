@@ -105,8 +105,8 @@ void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 			}
 		}
 
-		printf("cuda start\n");
-		printf("source id:%d\n",Sources[0]);
+		// printf("cuda start\n");
+		// printf("source id:%d\n",Sources[0]);
 
 		TM_D.start();
 		GNRSearchMain(Sources[0]);
@@ -122,11 +122,11 @@ void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 		__CUDA_ERROR("BellmanFord Kernel");
 
 		totalEdges += edgeTraversed;
-		if (N_OF_TESTS > 1)
-			std::cout << "iter: " << std::setw(10) << i
-					  << "\ttime: " << std::setw(10) << time
-					  << "\tEdges: " << std::setw(10) << edgeTraversed
-					  << "\tsource: " << Sources[0] << std::endl;
+		// if (N_OF_TESTS > 1)
+		// 	std::cout << "iter: " << std::setw(10) << i
+		// 			  << "\ttime: " << std::setw(10) << time
+		// 			  << "\tEdges: " << std::setw(10) << edgeTraversed
+		// 			  << "\tsource: " << Sources[0] << std::endl;
 
 		if (CHECK_RESULT)
 		{
@@ -164,11 +164,11 @@ void cudaGNRGraph::WorkEfficient(GraphWeight& graph)
 				dynamic_cast<GraphSSSP &>(graph).BellmanFord_Queue_end();
 		}
 
-	std::cout << std::endl
-			  << "\tNumber of TESTS: " << N_OF_TESTS << std::endl
-			  << "\t      Avg. Time: " << totalTime / N_OF_TESTS << " ms" << std::endl
-			  << "\t     Avg. MTEPS: " << totalEdges / (totalTime * 1000) << std::endl
-			  << "\t    maxFrontier: " << maxFrontier << std::endl
-			  << std::endl;
+	// std::cout << std::endl
+	// 		  << "\tNumber of TESTS: " << N_OF_TESTS << std::endl
+	// 		  << "\t      Avg. Time: " << totalTime / N_OF_TESTS << " ms" << std::endl
+	// 		  << "\t     Avg. MTEPS: " << totalEdges / (totalTime * 1000) << std::endl
+	// 		  << "\t    maxFrontier: " << maxFrontier << std::endl
+	// 		  << std::endl;
 }
 }

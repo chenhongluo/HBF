@@ -110,7 +110,7 @@ namespace cuda_graph {
     {
         cudaMalloc(&upF1,16* V * sizeof(int));
         cudaMalloc(&upF1Size, 1 * sizeof(int));
-        cudaMalloc(&upF2,16* V * sizeof(int));
+        cudaMalloc(&upF2,40* V * sizeof(int));
         cudaMalloc(&upF2Size, 1 * sizeof(int));
 
         cudaMalloc(&downF1,16* V * sizeof(int));
@@ -123,7 +123,7 @@ namespace cuda_graph {
         cudaMalloc(&devUpOutEdges, upGraph.OutEdgesVec.size() * sizeof(int2));
         cudaMalloc(&devDownOutEdges, downGraph.OutEdgesVec.size() * sizeof(int2));
 
-        cudaMalloc(&devDistances, V * sizeof(hdist_t));
+        cudaMalloc(&devDistances,80* V * sizeof(hdist_t));
     }
     void cudaGNRGraph::cudaFreeMem()
     {
@@ -169,7 +169,7 @@ namespace cuda_graph {
             int g = (unsigned)initNode | (i<<SplitBits);
             Nodes.push_back(g);
         }
-        hostPrintfSmall(tempNode);
+        // hostPrintfSmall(tempNode);
         int tn = Nodes.size();
         copyVecTo<int>(Nodes,upF1);
         copyIntTo(tn,upF1Size);

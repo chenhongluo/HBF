@@ -1,0 +1,4 @@
+USER       PID %CPU %MEM    VSZ   RSS TTY      STAT START   TIME COMMAND
+root         1  0.0  0.0  18628  2260 pts/0    Ss   Nov27   0:00 /bin/bash
+root     48265  0.0  0.0  34388  1468 pts/0    R+   12:09   0:00 ps aux
+root     48266  0.0  0.0   6900  1012 pts/0    S+   12:09   0:00 less

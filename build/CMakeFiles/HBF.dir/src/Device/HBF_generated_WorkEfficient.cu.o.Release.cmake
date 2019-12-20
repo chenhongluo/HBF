@@ -72,7 +72,7 @@ set(generated_file_internal "/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Devi
 set(generated_cubin_file_internal "/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Device/./HBF_generated_WorkEfficient.cu.o.cubin.txt") # path
 
 set(CUDA_NVCC_EXECUTABLE "/usr/local/cuda/bin/nvcc") # path
-set(CUDA_NVCC_FLAGS -std=c++11;-Xcompiler=-O3;-w;--ptxas-options=-v;-arch=sm_70;-DARCH=700;-use_fast_math;-Xcompiler=-O3,-march=native,-funroll-loops ;; -DSM=68;-DBOOST_FOUND) # list
+set(CUDA_NVCC_FLAGS -std=c++11;-Xcompiler=-O3;-w;--ptxas-options=-v;-arch=sm_75;-DARCH=750;-use_fast_math;-Xcompiler=-O3,-march=native,-funroll-loops ;; -DSM=68;-DBOOST_FOUND) # list
 # Build specific configuration flags
 set(CUDA_NVCC_FLAGS_DEBUG  ; )
 set(CUDA_NVCC_FLAGS_MINSIZEREL  ; )

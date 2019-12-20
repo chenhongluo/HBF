@@ -72,8 +72,8 @@ const vector<int> selectNodesNum = {
 };
 
 #define NODESPLIT false
-const int EdgesOneSplit = 4096;
-#define SPLITBITS 2
+const int EdgesOneSplit = 2048;
+#define SPLITBITS 3
 
 //kernel para
 const int KERNELNODES = 68*64;

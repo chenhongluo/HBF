@@ -40,7 +40,7 @@ using namespace timer;
 int main(int argc, char** argv) {
 	if (argc < 2)
 		__ERROR("No Input File");
-    cudaSetDevice(2);
+    cudaSetDevice(0);
 	cuda_util::cudaStatics();
 
     node_t V; edge_t E; int nof_lines;
@@ -72,15 +72,15 @@ int main(int argc, char** argv) {
 
    // graph.DijkstraSET(0);
 
-#if defined(BOOST_FOUND)
-float time =0.0;
-    for (int i = 0; i < N_OF_TESTS; i++)
-	{
-		int k = TEST_NODES[i];
-        graph.BoostDijkstra(k,time);
-    }
-    printf("dijkstra:%f",time/N_OF_TESTS);
-    // graph.BoostDijkstra(0);
-    //graph.BoostBellmanFord(0);
-#endif
+// #if defined(BOOST_FOUND)
+// float time =0.0;
+//     for (int i = 0; i < N_OF_TESTS; i++)
+// 	{
+// 		int k = TEST_NODES[i];
+//         graph.BoostDijkstra(k,time);
+//     }
+//     printf("dijkstra:%f",time/N_OF_TESTS);
+//     // graph.BoostDijkstra(0);
+//     //graph.BoostBellmanFord(0);
+// #endif
 }

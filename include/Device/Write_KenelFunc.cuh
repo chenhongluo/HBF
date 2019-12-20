@@ -16,6 +16,7 @@ namespace Kernels
         int sum = 0;
         int bias = 0;
         VWInclusiveScanAdd<VW_SIZE,int>(tile,writeCount,sum);
+        // devPrintfInt(32,sum,"sum");
         if(tile.thread_rank() == tile.size()-1 && sum !=0)
         {
             bias = atomicAdd(pAllsize,sum);

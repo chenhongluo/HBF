@@ -117,9 +117,10 @@ void VWWrite_v3(thread_block_tile<VW_SIZE>& tile,int *pAllsize,T* writeStartAddr
     }
     bias = tile.shfl(bias,tile.size()-1);
     sum -= writeCount;
-    for(int it = 0;it<8;it++)
+    for(int it = 0;it<16;it++)
     {
-        *(writeStartAddr+bias+sum+it) = data[it];     
+        if(it<writeCount)
+            *(writeStartAddr+bias+sum+it) = data[it];     
     }
 }
 
@@ -167,10 +168,10 @@ void VWWrite_v4(thread_block_tile<VW_SIZE>& tile,int *pAllsize,T* writeStartAddr
 
 __host__ __device__ __forceinline__ int is_write(mytype v)
 {
-    return !(v%4);
+    return !(v%16);
 }
 
-#define REG 16
+#define REG 8
 
 __global__ void test(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
 {
@@ -187,30 +188,30 @@ __global__ void test(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
     VWWrite<32,mytype>(tile, pf2Size, f2, k , array);
 }
 
-__global__ void write_test1(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
-{
-    __shared__ mytype array[REG * 512];
-    int k=0;
-    thread_block g = this_thread_block();
-    thread_block_tile<32> tile = tiled_partition<32>(g);
-    int id = blockIdx.x * blockDim.x + threadIdx.x;
-    int stride = gridDim.x * blockDim.x;
-    for(;id<f1Size;id=id+stride)
-    {
-        mytype v = f1[id];
-        if(is_write(v))
-        {
-            array[threadIdx.x * REG + k++] = v;
-        }
-        if(tile.any(k>=REG))
-        {           
-            VWWrite<32,mytype>(tile, pf2Size, f2, k , array + threadIdx.x * REG);
-            k=0;
-        }       
-    }
-    VWWrite<32,mytype>(tile, pf2Size, f2, k , array + threadIdx.x * REG);
-    k=0;
-}
+// __global__ void write_test1(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
+// {
+//     __shared__ mytype array[REG * 512];
+//     int k=0;
+//     thread_block g = this_thread_block();
+//     thread_block_tile<32> tile = tiled_partition<32>(g);
+//     int id = blockIdx.x * blockDim.x + threadIdx.x;
+//     int stride = gridDim.x * blockDim.x;
+//     for(;id<f1Size;id=id+stride)
+//     {
+//         mytype v = f1[id];
+//         if(is_write(v))
+//         {
+//             array[threadIdx.x * REG + k++] = v;
+//         }
+//         if(tile.any(k>=REG))
+//         {           
+//             VWWrite<32,mytype>(tile, pf2Size, f2, k , array + threadIdx.x * REG);
+//             k=0;
+//         }       
+//     }
+//     VWWrite<32,mytype>(tile, pf2Size, f2, k , array + threadIdx.x * REG);
+//     k=0;
+// }
 
 __global__ void write_test2(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
 {
@@ -240,7 +241,7 @@ __global__ void write_test2(const mytype *f1,int f1Size, mytype* f2, int* pf2Siz
 __global__ void write_test3(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
 {
     int k=0;
-    mytype array[8];
+    mytype array[16];
     thread_block g = this_thread_block();
     thread_block_tile<32> tile = tiled_partition<32>(g);
     int id = blockIdx.x * blockDim.x + threadIdx.x;
@@ -253,7 +254,7 @@ __global__ void write_test3(const mytype *f1,int f1Size, mytype* f2, int* pf2Siz
         {
             // array[k] = v;
 #pragma unroll
-            for(int i=0;i<8;i++)
+            for(int i=0;i<16;i++)
             {
                 if(k == i)
                 {
@@ -262,7 +263,7 @@ __global__ void write_test3(const mytype *f1,int f1Size, mytype* f2, int* pf2Siz
             }
             k++;
         }
-        if(tile.any(k>=8))
+        if(tile.any(k>=16))
         {
             VWWrite_v3<32,mytype>(tile, pf2Size, f2, k , array);
             k=0;
@@ -335,6 +336,81 @@ __global__ void write_test5(const mytype *f1,int f1Size, mytype* f2, int* pf2Siz
         *(f2+all+threadIdx.x) = array[threadIdx.x];
 }
 
+#define SHRM 64 
+__global__ void write_test6(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
+{
+    int warpId = threadIdx.x/32;
+    int warpThreadId = threadIdx.x%32;
+    __shared__ mytype st[SHRM*512/32];
+    mytype* saddr = st + warpId*SHRM;
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = gridDim.x * blockDim.x;
+    int Founds = 0;
+    int globalBias;
+    unsigned mymask = (1<< warpThreadId) -1;
+    for(;id<f1Size;id=id+stride)
+    {
+        mytype v = f1[id];
+        int flag = is_write(v);
+        unsigned mask = __ballot_sync(0xFFFFFFFF,flag);
+        int sum = __popc(mask);
+        // printf("%d sum :%d",threadIdx.x,sum);
+        if(sum+Founds>SHRM)
+        {
+            if(warpThreadId == 0)
+                globalBias = atomicAdd(pf2Size,Founds);
+            globalBias = __shfl_sync(0xFFFFFFFF,globalBias,0);
+            // printf("%d sum :%d\n",threadIdx.x,globalBias);
+            for(int j=warpThreadId;j<Founds;j+=32)
+                f2[globalBias+j] = saddr[j];
+            Founds = 0;
+        }
+        if(flag)
+        {
+            mask = mask & mymask;
+            int pos = __popc(mask);
+            // printf("%d,%d pos :%d,%0x,%0x \n",threadIdx.x,warpThreadId,pos,mask,mymask);
+            saddr[pos+Founds] = v;
+        }
+        __syncwarp(0xFFFFFFFF);
+        Founds += sum;        
+    }
+    if(warpThreadId == 0 && Founds!= 0)
+        globalBias = atomicAdd(pf2Size,Founds);
+    globalBias = __shfl_sync(0xFFFFFFFF,globalBias,0);
+    // if(warpThreadId == 0)
+    //     printf("%d globalBias :%d\n",threadIdx.x,globalBias);
+    // printf("%d Founds :%d\n",threadIdx.x,Founds);
+    // for(int j=warpThreadId;j<Founds;j+=32)
+    //     printf("%d ",saddr[j]);
+    for(int j=warpThreadId;j<Founds;j+=32)
+        f2[globalBias+j] = saddr[j];
+}
+
+__global__ void write_test7(const mytype *f1,int f1Size, mytype* f2, int* pf2Size)
+{
+    // int warpId = threadIdx.x/32;
+    // int warpThreadId = threadIdx.x%32;
+    // __shared__ mytype st[SHRM*512/32];
+    // mytype* saddr = st + warpId*SHRM;
+    int id = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = gridDim.x * blockDim.x;
+    // int Founds = 0;
+    // int globalBias;
+    // unsigned mymask = (1<< warpThreadId) -1;
+    for(;id<f1Size;id=id+stride)
+    {
+        mytype v = f1[id];
+        int flag = is_write(v);
+        if(flag)
+        {
+            int pos = atomicAdd(pf2Size,1);
+            f2[pos] = v;
+        }
+    }
+}
+
+
 typedef void(*func)(const mytype*,int, mytype*, int*);
 
 void test_time(func f,const mytype* f1,mytype *f2,int* f2Size)
@@ -344,99 +420,119 @@ void test_time(func f,const mytype* f1,mytype *f2,int* f2Size)
     cudaEventCreate(&s2);
     cudaEventRecord(s1,0);
     cudaEventSynchronize(s1);
-    f<<<1,512>>>(f1,ARRAYLEN,f2,f2Size);
+    unsigned t1 = clock();
+    f<<<68*4,256>>>(f1,ARRAYLEN,f2,f2Size);
     cudaEventRecord(s2,0);
     cudaEventSynchronize(s2);
+    t1 = clock()-t1;
     float time1;
     cudaEventElapsedTime(&time1,s1,s2);
     cudaDeviceSynchronize();
     cudaEventDestroy(s1);
     cudaEventDestroy(s2);
-    printf("%f\n",time1);
+    printf("%f,%d\n",time1,t1);
 }
 int main()
 {
     mytype *f1,*f2;
+    int* hostF1;
     int *f2Size;
     srand( (unsigned)time( NULL ) );  
-    cudaSetDevice(2);
+    cudaSetDevice(5);
     size_t ds = ARRAYLEN*sizeof(mytype);
-    cudaMallocManaged(&f1, ds);
-    cudaMallocManaged(&f2, ds);
+    cudaMalloc(&f2, ds);
+    cudaMalloc(&f1, ds);
     cudaMallocManaged(&f2Size, sizeof(int));
+    hostF1 = (int*)malloc(ARRAYLEN*4);
     for(int i=0;i<ARRAYLEN;i++)
     {
-        f1[i] = rand()%1000;
+        hostF1[i] = rand()%1000;
     }
-    int attr = 0;
-    cudaDeviceGetAttribute(&attr, cudaDevAttrConcurrentManagedAccess,0);
-    if (attr)
-    {
-        cudaMemPrefetchAsync(f1, ds, 0);
-        // cudaMemPrefetchAsync(f2, ds, 0);
-    }
+    cudaMemcpy(f1, hostF1, ARRAYLEN*4, cudaMemcpyHostToDevice);
 
     int cT=0;
     for(int i=0;i<ARRAYLEN;i++)
     {
-        if(is_write(i))
+        if(is_write(hostF1[i]))
             cT++;
     }
 
     f2Size[0] = 0;
 
-    test_time(f1,ARRAYLEN,f2,f2Size);
+    // test_time(f1,ARRAYLEN,f2,f2Size);
 
     f2Size[0] = 0;
     
-    for(int i=0;i<1;i++)
-    {
-        f2Size[0] = 0;
-        test_time(write_test5,f1,f2,f2Size);
-        __CUDA_ERROR("");
-    }
+    // for(int i=0;i<1;i++)
+    // {
+    //     f2Size[0] = 0;
+    //     test_time(write_test5,f1,f2,f2Size);
+    //     __CUDA_ERROR("");
+    // }
 
-    f2Size[0] = 0;
+    // f2Size[0] = 0;
     
-    for(int i=0;i<1;i++)
-    {
-        f2Size[0] = 0;
-        test_time(write_test4,f1,f2,f2Size);
-    }
-    printf("%d,%d\n",f2Size[0],cT);
+    // for(int i=0;i<1;i++)
+    // {
+    //     f2Size[0] = 0;
+    //     test_time(write_test4,f1,f2,f2Size);
+    // }
+    // printf("%d,%d\n",f2Size[0],cT);
     
+    // printf("test3\n");
+    // for(int i=0;i<1;i++)
+    // {
+    //     f2Size[0] = 0;
+    //     test_time(write_test3,f1,f2,f2Size);
+    // }
+    // printf("%d,%d\n",f2Size[0],cT);
+    // cudaDeviceSynchronize();
+    int xxxx = 0;
     printf("test2\n");
-    for(int i=0;i<1;i++)
-    {
-        f2Size[0] = 0;
-        test_time(write_test3,f1,f2,f2Size);
-    }
-    printf("%d,%d\n",f2Size[0],cT);
-
-    printf("test3\n");
-    for(int i=0;i<1;i++)
+    for(int i=0;i<10;i++)
     {
         f2Size[0] = 0;
         test_time(write_test2,f1,f2,f2Size);
+        test_time(write_test6,f1,f2,f2Size);
+        test_time(write_test7,f1,f2,f2Size);
+        
     }
-    printf("%d,%d\n",f2Size[0],cT);
 
-    printf("test4\n");
-    for(int i=0;i<1;i++)
+    // xxxx = 0;
+    // for(int i=0;i<ARRAYLEN;i++)
+    // {
+    //     xxxx+=f2[i];
+    // }
+    // for(int i=0;i<f2Size[0];i++)
+    // {
+    //     printf("%d ",f2[i]);
+    // }
+
+    printf("\n%d,%d,%d\n",xxxx,f2Size[0],cT);
+
+
+    printf("test6\n");
+    for(int i=0;i<2;i++)
     {
         f2Size[0] = 0;
-        test_time(write_test1,f1,f2,f2Size);
+        
     }
 
     __CUDA_ERROR("");
 
-//  for(int i=0;i<f2Size[0];i++)
-//     {
-//         printf("%d ",f2[i]);
-//     }
+    // xxxx = 0;
+    // for(int i=0;i<ARRAYLEN;i++)
+    // {
+    //     xxxx+=f2[i];
+    // }
+
+    // for(int i=0;i<f2Size[0];i++)
+    // {
+    //     printf("%d ",f2[i]);
+    // }
 
 
-    printf("%d,%d\n",f2Size[0],cT);
+    printf("\n%d,%d,%d\n",xxxx,f2Size[0],cT);
     std::cout << "Success!" << std::endl;
     return 0;
 }

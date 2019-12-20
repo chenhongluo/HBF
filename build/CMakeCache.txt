@@ -15,7 +15,7 @@
 ########################
 
 //architectures
-ARCH:STRING=70
+ARCH:STRING=75
 
 //The directory containing a CMake configuration file for Boost.
 Boost_DIR:PATH=Boost_DIR-NOTFOUND
@@ -501,7 +501,7 @@ COMPILER_SUPPORTS_CXX11:INTERNAL=1
 CUDA_64_BIT_DEVICE_CODE-ADVANCED:INTERNAL=1
 //List of intermediate files that are part of the cuda dependency
 // scanning.
-CUDA_ADDITIONAL_CLEAN_FILES:INTERNAL=/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir//HBF_generated_Main.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Device/HBF_generated_cudaOverlayGraph.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Device/HBF_generated_WorkEfficient.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/XLib/Base/Device/Util/src/HBF_generated_cuda_util.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/XLib/Base/Device/Util/src/HBF_generated_global_sync.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/XLib/Base/Device/Util/src/HBF_generated_Timer.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/XLib/Graph/Device/src/HBF_generated_cudaGraphPreDeal.cu.o.depend
+CUDA_ADDITIONAL_CLEAN_FILES:INTERNAL=/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir//HBF_generated_Main.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Device/HBF_generated_cudaOverlayGraph.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/src/Device/HBF_generated_WorkEfficient.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/XLib/Base/Device/Util/src/HBF_generated_cuda_util.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/XLib/Base/Device/Util/src/HBF_generated_Timer.cu.o.depend;/home/chl/HNR_GPU/build/CMakeFiles/HBF.dir/XLib/Graph/Device/src/HBF_generated_cudaGraphPreDeal.cu.o.depend
 //ADVANCED property for variable: CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE
 CUDA_ATTACH_VS_BUILD_RULE_TO_CUDA_FILE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CUDA_BUILD_CUBIN
