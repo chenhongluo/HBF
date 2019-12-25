@@ -33,24 +33,27 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 using namespace cuda_graph;
 using namespace timer;
 
-#if LOGFRONTIER|LOGMARKS
-	ofstream LOGIN(LOGNAME);
+#if LOGFRONTIER | LOGMARKS
+ofstream LOGIN(LOGNAME);
 #endif
 
-int main(int argc, char** argv) {
-	if (argc < 2)
-		__ERROR("No Input File");
-    cudaSetDevice(0);
-	cuda_util::cudaStatics();
+int main(int argc, char **argv)
+{
+    if (argc < 2)
+        __ERROR("No Input File");
+    cudaSetDevice(1);
+    cuda_util::cudaStatics();
 
-    node_t V; edge_t E; int nof_lines;
+    node_t V;
+    edge_t E;
+    int nof_lines;
     graph::EdgeType edgeType = graph::EdgeType::UNDEF_EDGE_TYPE;
     graph::readHeader(argv[1], V, E, nof_lines, edgeType);
 
     GraphSSSP graph(V, E, edgeType);
     graph.read(argv[1], nof_lines);
 
-    GraphWeight& gw=graph;
+    GraphWeight &gw = graph;
     printf("init PreDeal\n");
     GraphPreDeal gp(gw);
     printf("start PreDeal\n");
@@ -58,7 +61,7 @@ int main(int argc, char** argv) {
     TM.start();
     PreDealGraph(gp);
     TM.stop();
-    printf("predeal time:%f",TM.duration());
+    printf("predeal time:%f", TM.duration());
     printf("end PreDeal\n");
     cudaGNRGraph gnr(gp);
     printf("\nmalloc devgraph");
@@ -70,17 +73,17 @@ int main(int argc, char** argv) {
     __CUDA_ERROR("copy");
     gnr.WorkEfficient(gw);
 
-   // graph.DijkstraSET(0);
+    // graph.DijkstraSET(0);
 
-// #if defined(BOOST_FOUND)
-// float time =0.0;
-//     for (int i = 0; i < N_OF_TESTS; i++)
-// 	{
-// 		int k = TEST_NODES[i];
-//         graph.BoostDijkstra(k,time);
-//     }
-//     printf("dijkstra:%f",time/N_OF_TESTS);
-//     // graph.BoostDijkstra(0);
-//     //graph.BoostBellmanFord(0);
-// #endif
+#if defined(BOOST_FOUND)
+    float time = 0.0;
+    for (int i = 0; i < N_OF_TESTS; i++)
+    {
+        int k = TEST_NODES[i];
+        graph.BoostDijkstra(k, time);
+    }
+    printf("dijkstra:%f", time / N_OF_TESTS);
+    // graph.BoostDijkstra(0);
+    //graph.BoostBellmanFord(0);
+#endif
 }

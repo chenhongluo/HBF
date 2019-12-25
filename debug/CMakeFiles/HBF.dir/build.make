@@ -905,10 +905,8 @@ CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../cub-1.8.1/cu
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../cub-1.8.1/cub/warp/warp_reduce.cuh
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../cub-1.8.1/cub/warp/warp_scan.cuh
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../include/Device/GNR_KernelFunc.cuh
-CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../include/Device/Get_Node_Info.cuh
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../include/Device/LOG.cuh
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../include/Device/PreDeal_KernelFunc.cuh
-CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../include/Device/Write_KenelFunc.cuh
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../include/Device/cudaOverlayGraph.cuh
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../include/Host/GraphSSSP.hpp
 CMakeFiles/HBF.dir/src/Device/HBF_generated_GNR_KernelMain.cu.o: ../src/Device/GNR_KernelMain.cu
