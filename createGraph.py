@@ -10,4 +10,5 @@ for i in range(V):
         y = np.random.randint(1,1000)
         f.write("a %d %d %d\n"%(i+1,x,y))
 # f.write("a")
+# chenhongluo
 f.close()
